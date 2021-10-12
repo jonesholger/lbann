@@ -92,25 +92,29 @@ void local_bp_cpu(const El::AbstractMatrix<TensorDataType>& local_prediction,
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_MARK_BEGIN("cross_entropy_layer::local_fp_compute");
 #endif
-
   local_fp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->Matrix());
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("cross_entropy_layer::local_fp_compute");
+#endif
 }
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_bp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_MARK_BEGIN("cross_entropy_layer::local_bp_compute");
 #endif
-
   local_bp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->LockedMatrix(),
                this->get_local_error_signals(0),
                this->get_local_error_signals(1));
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("cross_entropy_layer::local_bp_compute");
+#endif
 }
 
 #define PROTO(T)                                      \
