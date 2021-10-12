@@ -40,6 +40,7 @@
 #include "lbann/utils/timer.hpp"
 #include "lbann/utils/typename.hpp"
 #include "lbann/weights/weights.hpp"
+#include "lbann/utils/profiling.hpp"
 #ifdef LBANN_HAS_DISTCONV
 #include "lbann/layers/distconv_adapter.hpp"
 #endif // LBANN_HAS_DISTCONV

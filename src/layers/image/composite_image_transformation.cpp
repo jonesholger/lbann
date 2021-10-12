@@ -33,6 +33,9 @@ namespace lbann {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void composite_image_transformation_layer<TensorDataType, Layout, Device>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Useful constants
   constexpr DataType Pi = M_PI;

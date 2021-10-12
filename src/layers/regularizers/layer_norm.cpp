@@ -55,6 +55,10 @@ void fp_impl(lbann_comm& comm,
 
   // Compute sums
   El::Zero(statistics);
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("layer_norm_fp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR
   for (El::Int i = 0; i < local_num_samples; ++i) {
     auto& sum = local_means(0,i);
@@ -88,6 +92,10 @@ void fp_impl(lbann_comm& comm,
       local_vars(0,i) = std::max(var, El::TypeTraits<TensorDataType>::Zero());
     }
   }
+
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("layer_norm_fp");
+#endif
 
   // Apply layer norm
   //   y_i = (x_i - mean) / sqrt(var + epsilon)
@@ -142,6 +150,10 @@ void bp_impl(lbann_comm& comm,
   //   dL/dmean = - sum(dL/dy_i) / sqrt(var+epsilon)
   //   dL/dvar = - sum(dL/dy_i * (x_i-mean)) * (var+epsilon)^(-3/2) / 2
   El::Zero(statistics_grad);
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("layer_norm_bp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR
   for (El::Int i = 0; i < local_num_samples; ++i) {
     const auto& mean = local_means(0,i);
@@ -182,6 +194,10 @@ void bp_impl(lbann_comm& comm,
             + dvar * (x - mean) * 2 / (sample_size - 1));
     }
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("layer_norm_bp");
+#endif
+
 
 }
 

@@ -152,6 +152,9 @@ template <typename TensorDataType>
 void adam<TensorDataType>::step_compute_cpu(AbsDistMatrixType& values,
                                             const AbsDistMatrixType& gradient,
                                             const TensorDataType& correction) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   static const auto one = TensorDataType(1.);
 
   // Get local matrix data

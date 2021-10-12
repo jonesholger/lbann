@@ -28,6 +28,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "lbann/data_readers/data_reader_numpy_npz.hpp"
+#include "lbann/utils/profiling.hpp"
 #include <cstdio>
 #include <string>
 #include <unordered_set>
@@ -69,6 +70,9 @@ namespace lbann {
   }
 
   void numpy_npz_reader::load() {
+#ifdef LBANN_HAS_CALIPER
+   CALI_CXX_MARK_FUNCTION;
+#endif
     std::string infile = get_data_filename();
     // Ensure the file exists.
     std::ifstream ifs(infile);

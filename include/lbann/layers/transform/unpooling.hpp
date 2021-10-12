@@ -149,6 +149,9 @@ class unpooling_layer : public data_type_layer<TensorDataType> {
   /// Unpooling forward propagation with im2col
   void fp_compute_im2col() {
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     using DMatDT = El::Matrix<TensorDataType, Dev>;
 
     // Get pooling layer
@@ -212,6 +215,9 @@ class unpooling_layer : public data_type_layer<TensorDataType> {
   /// Unpooling backward propagation with im2col
   void bp_compute_im2col() {
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     using DMatDT = El::Matrix<TensorDataType, Dev>;
 
     // Get pooling layer

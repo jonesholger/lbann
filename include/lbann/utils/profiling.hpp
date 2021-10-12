@@ -28,6 +28,13 @@
 #ifndef LBANN_UTILS_PROFILING_HPP
 #define LBANN_UTILS_PROFILING_HPP
 
+#ifdef LBANN_HAS_CALIPER
+#include <caliper/cali.h>
+#include <caliper/cali-manager.h>
+#include <caliper/cali_macros.h>
+#include <adiak.hpp>
+#endif
+
 namespace lbann {
 
 // Colors to use for profiling.
@@ -43,6 +50,7 @@ void prof_start();
 void prof_stop();
 void prof_region_begin(const char *s, int c, bool sync);
 void prof_region_end(const char *s, bool sync);
+
 
 }  // namespace lbann
 

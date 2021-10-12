@@ -92,6 +92,9 @@ class discrete_random_layer : public data_type_layer<TensorDataType> {
 
   void fp_compute() override {
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     // Input and output matrices
     const auto& input = this->get_prev_activations();
     const auto& local_input = input.LockedMatrix();
@@ -109,6 +112,9 @@ class discrete_random_layer : public data_type_layer<TensorDataType> {
     }
 
     // Process each mini-batch sample
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("discrete_batch");
+#endif
     LBANN_OMP_PARALLEL_FOR
     for (El::Int col = 0; col < local_width; ++col) {
       const auto& input_ptr = local_input.LockedBuffer(0, col);
@@ -131,9 +137,11 @@ class discrete_random_layer : public data_type_layer<TensorDataType> {
         std::fill_n(output_ptr, num_outputs, m_values[index]);
       }
     }
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_END("discrete_batch");
+#endif
 
   }
-
 };
 
 #ifndef LBANN_DISCRETE_RANDOM_LAYER_INSTANTIATE

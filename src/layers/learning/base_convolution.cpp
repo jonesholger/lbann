@@ -210,6 +210,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::setup_dims(DataReaderMetaData& dr_metadata) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   data_type_layer<TensorDataType>::setup_dims(dr_metadata);
   std::ostringstream err;
 
@@ -297,6 +301,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::setup_data(size_t max_mini_batch_size) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   data_type_layer<TensorDataType>::setup_data(max_mini_batch_size);
 
   // Tensor dimensions
@@ -386,6 +394,10 @@ base_convolution_layer<TensorDataType,Device>
 template <typename TensorDataType, El::Device Device>
 void base_convolution_layer<TensorDataType,Device>::setup_gpu() {
   data_type_layer<TensorDataType>::setup_gpu();
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -421,6 +433,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::apply_convolution_dnn(bool during_forward_prop) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -507,6 +523,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>::
 apply_transposed_convolution_dnn(bool during_forward_prop) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -593,6 +613,10 @@ apply_transposed_convolution_dnn(bool during_forward_prop) {
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_layer<TensorDataType,Device>::apply_bias_dnn() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -616,6 +640,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::compute_gradients_dnn(bool using_transposed_convolution) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -738,6 +766,10 @@ void
 base_convolution_layer<TensorDataType,Device>
 ::apply_convolution_im2col(bool during_forward_prop) {
 
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   // Local matrices
   const auto& local_kernel = this->weights_values(0).LockedMatrix();
   const auto& local_input = (during_forward_prop ?
@@ -800,6 +832,10 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::apply_transposed_convolution_im2col(bool during_forward_prop) {
+
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Local matrices
   const auto& local_kernel = this->weights_values(0).LockedMatrix();
@@ -864,6 +900,9 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::apply_bias_cpu() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Return immediately if there is no bias
   if (m_bias_scaling_factor == El::TypeTraits<ScalingType>::Zero()) return;
@@ -895,6 +934,9 @@ base_convolution_layer<TensorDataType,Device>
 template <typename TensorDataType, El::Device Device>
 void base_convolution_layer<TensorDataType,Device>
 ::compute_gradients_im2col(bool using_transposed_convolution) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Local matrices
   const DMatDT<Device>& local_input = this->get_local_prev_activations();
@@ -1020,6 +1062,10 @@ base_convolution_layer<TensorDataType,Device>::get_forward_algo_dnn(
   size_t ws_size,
   TensorDataType* ws) {
   if (m_fwd_dnn_algos.count(local_mini_batch_size) == 0) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
 #ifdef LBANN_DETERMINISTIC
     bool deterministic = true;
 #else
@@ -1050,6 +1096,10 @@ base_convolution_layer<TensorDataType,Device>::get_backward_data_algo_dnn(
   TensorDataType* error_signal,
   size_t ws_size,
   TensorDataType* ws) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   if (m_bwd_data_dnn_algos.count(local_mini_batch_size) == 0) {
 #ifdef LBANN_DETERMINISTIC
     bool deterministic = true;
@@ -1080,6 +1130,10 @@ base_convolution_layer<TensorDataType,Device>::get_backward_filter_algo_dnn(
   const dnn_lib::FilterDescriptor& kernel_gradient_desc,
   size_t ws_size,
   TensorDataType* ws) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   if (m_bwd_filter_dnn_algos.count(local_mini_batch_size) == 0) {
 #ifdef LBANN_DETERMINISTIC
     bool deterministic = true;
@@ -1130,6 +1184,10 @@ base_convolution_layer<TensorDataType, Device>::get_distconv_adapter() {
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::setup_fp_tensors() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   data_type_distconv_adapter<TensorDataType>::setup_fp_tensors();
   auto &layer = dynamic_cast<
     base_convolution_layer<TensorDataType, Device>&>(this->layer());
@@ -1158,6 +1216,10 @@ void base_convolution_adapter<TensorDataType, Device>::setup_fp_tensors() {
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::setup_bp_tensors() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   data_type_distconv_adapter<TensorDataType>::setup_bp_tensors();
   auto &l = dynamic_cast<
     base_convolution_layer<TensorDataType, Device>&>(this->layer());
@@ -1196,6 +1258,10 @@ void base_convolution_adapter<TensorDataType, Device>::setup_bp_tensors() {
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::setup_layer(
   size_t workspace_capacity) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   data_type_distconv_adapter<TensorDataType>::setup_layer(workspace_capacity);
   auto &layer = dynamic_cast<base_convolution_layer<TensorDataType, Device>&>(this->layer());
   m_conv = make_unique<dc::Convolution<TensorDataType>>(
@@ -1209,6 +1275,10 @@ void base_convolution_adapter<TensorDataType, Device>::setup_layer(
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::fp_compute_convolution() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   auto &l = dynamic_cast<base_convolution_layer<
     TensorDataType, Device>&>(this->layer());
   assert0(dc::tensor::View(
@@ -1219,6 +1289,10 @@ void base_convolution_adapter<TensorDataType, Device>::fp_compute_convolution() 
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::fp_apply_bias() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   auto &l = dynamic_cast<base_convolution_layer<
     TensorDataType, Device>&>(this->layer());
   if (l.m_bias_scaling_factor == El::To<TensorDataType>(0)) return;
@@ -1230,6 +1304,10 @@ void base_convolution_adapter<TensorDataType, Device>::fp_apply_bias() {
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::bp_compute_convolution_data() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   auto &l = dynamic_cast<base_convolution_layer<
     TensorDataType, Device>&>(this->layer());
   assert0(dc::tensor::View(
@@ -1241,6 +1319,10 @@ void base_convolution_adapter<TensorDataType, Device>::bp_compute_convolution_da
 
 template <typename TensorDataType, El::Device Device>
 void base_convolution_adapter<TensorDataType, Device>::bp_compute_convolution_filter() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   auto &l = dynamic_cast<base_convolution_layer<
     TensorDataType, Device>&>(this->layer());
   const bool has_local_data = this->get_prev_activations().get_local_size() > 0 &&

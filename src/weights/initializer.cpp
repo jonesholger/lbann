@@ -60,6 +60,9 @@ void constant_initializer<TensorDataType>::fill(AbsDistMatrixType& matrix) {
 
 template <typename TensorDataType>
 void value_initializer<TensorDataType>::fill(AbsDistMatrixType& matrix) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Check that number of values matches weights matrix
   if (matrix.Height() * matrix.Width() != (El::Int) m_values.size()) {

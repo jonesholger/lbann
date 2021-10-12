@@ -140,6 +140,9 @@ option(LBANN_WITH_TBINF "Include Tensorboard interface" ${LBANN_WITH_VISION})
 option(LBANN_WITH_VTUNE
   "Link the Intel VTune profiling library" OFF)
 
+option(LBANN_WITH_CALIPER
+  "Link the Caliper profiling library" OFF)
+
 option(LBANN_WITH_UNIT_TESTING
   "Enable the unit testing framework (requires Catch2)" OFF)
 
@@ -454,6 +457,18 @@ if (LBANN_WITH_VTUNE)
   endif (VTune_FOUND)
 endif (LBANN_WITH_VTUNE)
 
+if (LBANN_WITH_CALIPER)
+  find_package(caliper REQUIRED)
+  find_package(adiak REQUIRED)
+  if(caliper_FOUND AND adiak_FOUND)
+    set(LBANN_HAS_CALIPER TRUE)
+    message(STATUS "LBANN_WITH_CALIPER")
+  else ()
+    set(LBANN_HAS_CALIPER FALSE)
+    set(LBANN_WITH_CALIPER OFF)
+  endif (caliper_FOUND AND adiak_FOUND)
+endif (LBANN_WITH_CALIPER)
+
 if (LBANN_WITH_CUDA AND LBANN_WITH_NVPROF)
   set(LBANN_NVPROF TRUE)
 endif ()
@@ -620,6 +635,10 @@ target_include_directories(lbann PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>)
 
+if (LBANN_HAS_CALIPER)
+  target_include_directories(lbann PUBLIC ${caliper_INCLUDE_PATH} ${adiak_INCLUDE_DIRS})
+endif (LBANN_HAS_CALIPER)
+
 # The max of CXX_STANDARD and this value will be used.
 target_compile_features(lbann PUBLIC cxx_std_17)
 
@@ -672,6 +691,11 @@ endif ()
 
 if (LBANN_HAS_VTUNE)
   target_link_libraries(lbann PUBLIC ${VTUNE_STATIC_LIB})
+endif ()
+
+if(LBANN_HAS_CALIPER)
+  target_link_libraries(lbann PUBLIC adiak)
+  target_link_libraries(lbann PUBLIC caliper)
 endif ()
 
 if (LBANN_HAS_NVSHMEM)
@@ -939,6 +963,7 @@ string(APPEND _str "\n")
 append_str_tf(_str
   LBANN_GNU_LINUX
   LBANN_HAS_ALUMINUM
+  LBANN_HAS_CALIPER
   LBANN_HAS_CEREAL
   LBANN_HAS_CEREAL_XML_ARCHIVES
   LBANN_HAS_CNPY

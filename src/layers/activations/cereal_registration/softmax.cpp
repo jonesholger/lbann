@@ -25,6 +25,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "lbann/utils/serialize.hpp"
 #include <lbann/layers/activations/softmax.hpp>
+#include "lbann/utils/profiling.hpp"
 
 namespace lbann {
 

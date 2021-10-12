@@ -282,6 +282,9 @@ bool KFAC::train_mini_batch(
   model& model,
   data_coordinator& dc)
 {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   auto& sgd_context = kfac_context.get_sgd_execution_context();
 
   model.reset_mode(sgd_context, execution_mode::training);

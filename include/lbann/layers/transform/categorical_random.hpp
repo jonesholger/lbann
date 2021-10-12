@@ -77,6 +77,9 @@ class categorical_random_layer : public data_type_layer<TensorDataType> {
 
   void fp_compute() override {
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     // Input and output matrices
     const auto& input = this->get_prev_activations();
     const auto& local_input = input.LockedMatrix();
@@ -93,6 +96,9 @@ class categorical_random_layer : public data_type_layer<TensorDataType> {
       uniform_fill(rand_mat, 1, width, TensorDataType(0.5), TensorDataType(0.5));
     }
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("categorical_batch");
+#endif
     // Process each mini-batch sample
     LBANN_OMP_PARALLEL_FOR
     for (El::Int col = 0; col < local_width; ++col) {
@@ -121,6 +127,9 @@ class categorical_random_layer : public data_type_layer<TensorDataType> {
       local_output(index, col) = El::TypeTraits<TensorDataType>::One();
 
     }
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_END("categorical_batch");
+#endif
 
   }
 

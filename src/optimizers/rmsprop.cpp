@@ -89,6 +89,9 @@ void rmsprop<TensorDataType>::step_compute(AbsDistMatrixType& values,
 template <typename TensorDataType>
 void rmsprop<TensorDataType>::step_compute_cpu(AbsDistMatrixType& values,
                                                const AbsDistMatrixType& gradient) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Get local matrix data
   const size_t local_height = values.LocalHeight();

@@ -36,7 +36,6 @@ template <typename TensorDataType>
 void local_fp_cpu(const El::AbstractMatrix<TensorDataType>& local_prediction,
                   const El::AbstractMatrix<TensorDataType>& local_ground_truth,
                   El::AbstractMatrix<TensorDataType>& local_contribution) {
-
   // Useful constants
   const TensorDataType zero = El::TypeTraits<TensorDataType>::Zero();
   const El::Int local_height = local_prediction.Height();
@@ -67,7 +66,6 @@ void local_bp_cpu(const El::AbstractMatrix<TensorDataType>& local_prediction,
                   const El::AbstractMatrix<TensorDataType>& local_gradient_wrt_output,
                   El::AbstractMatrix<TensorDataType>& local_gradient_wrt_prediction,
                   El::AbstractMatrix<TensorDataType>& local_gradient_wrt_ground_truth) {
-
   // Useful constants
   const TensorDataType zero = El::TypeTraits<TensorDataType>::Zero();
   const El::Int local_height = local_prediction.Height();
@@ -93,6 +91,10 @@ void local_bp_cpu(const El::AbstractMatrix<TensorDataType>& local_prediction,
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   local_fp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->Matrix());
@@ -100,6 +102,10 @@ void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_bp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   local_bp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->LockedMatrix(),

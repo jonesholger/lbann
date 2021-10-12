@@ -35,6 +35,9 @@ template <typename TensorDataType>
 void fp_impl(const El::Matrix<TensorDataType, El::Device::CPU>& local_input,
              El::Matrix<TensorDataType, El::Device::CPU>& local_output,
              El::Matrix<TensorDataType, El::Device::CPU> const& local_scale_bias) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Local matrices
   const auto local_scale = El::LockedView(local_scale_bias,
@@ -65,6 +68,9 @@ void bp_impl(
   El::Matrix<TensorDataType, El::Device::CPU>& local_gradient_wrt_input,
   El::Matrix<TensorDataType, El::Device::CPU> const& local_scale_bias,
   El::AbstractDistMatrix<TensorDataType>& gradient_wrt_scale_bias) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;
 

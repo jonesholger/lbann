@@ -388,6 +388,9 @@ private:
 
   /// Pooling forward propagation with im2col
   void fp_compute_im2col() {
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     if(m_pool_mode != pooling_mode::MAX &&
        m_pool_mode != pooling_mode::MAX_DETERMINISTIC &&
        m_pool_mode != pooling_mode::AVERAGE_COUNT_INCLUDE_PADDING) {
@@ -479,6 +482,9 @@ private:
 
   /// Pooling forward propagation with im2col
   void bp_compute_im2col() {
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
     using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;
     if(m_pool_mode != pooling_mode::MAX &&
        m_pool_mode != pooling_mode::MAX_DETERMINISTIC &&

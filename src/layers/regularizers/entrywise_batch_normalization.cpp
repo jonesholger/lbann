@@ -51,6 +51,9 @@ void compute_batch_statistics(lbann_comm& comm,
                               El::AbstractDistMatrix<TensorDataType>& batch_statistics,
                               El::AbstractDistMatrix<TensorDataType>& running_mean,
                               El::AbstractDistMatrix<TensorDataType>& running_var) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;
 
   // Local matrices
@@ -121,6 +124,9 @@ void apply_batchnorm(DataType epsilon,
                      El::Matrix<TensorDataType, El::Device::CPU>& local_output,
                      const El::Matrix<TensorDataType, El::Device::CPU>& local_mean,
                      const El::Matrix<TensorDataType, El::Device::CPU>& local_var) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   const El::Int local_height = local_input.Height();
   const El::Int local_width = local_input.Width();
   LBANN_OMP_PARALLEL_FOR

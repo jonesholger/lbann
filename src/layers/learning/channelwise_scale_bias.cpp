@@ -31,6 +31,9 @@ namespace lbann {
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void channelwise_scale_bias_layer<TensorDataType, T_layout, Dev>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;
 
   // Local matrices

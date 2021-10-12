@@ -89,6 +89,10 @@ void apply_entrywise_binary_operator(
   const El::AbstractMatrix<TensorDataType>& input1,
   const El::AbstractMatrix<TensorDataType>& input2,
   El::AbstractMatrix<TensorDataType>& output) {
+
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   using BinaryOperator = Op<TensorDataType>;
   // Check that input and output are valid
   if (input1.GetDevice() != El::Device::CPU
@@ -141,6 +145,9 @@ template <template <typename> class Op, typename TensorDataType>
 void apply_entrywise_unary_operator(
   const El::AbstractDistMatrix<TensorDataType>& input,
   El::AbstractDistMatrix<TensorDataType>& output) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   if (input.Height() != output.Height()
       || input.Width() != output.Width()) {
     LBANN_ERROR("input matrix dimensions "

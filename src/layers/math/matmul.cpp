@@ -72,6 +72,10 @@ void fp_compute_impl(matmul_layer<TensorDataType,data_layout::DATA_PARALLEL,El::
   const auto input1_stride = input1_height * input1_width;
   const auto output_stride = output_height * output_width;
 
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_BEGIN("matmul_fp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR
   for (El::Int j = 0; j < mat_depth; ++j){
       auto input0_buffer_start = j * input0_stride;
@@ -91,6 +95,9 @@ void fp_compute_impl(matmul_layer<TensorDataType,data_layout::DATA_PARALLEL,El::
                El::TypeTraits<TensorDataType>::Zero(), output_v);
     }
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("matmul_fp");
+#endif
 
 }
 
@@ -135,6 +142,10 @@ void bp_compute_impl(matmul_layer<TensorDataType,data_layout::DATA_PARALLEL,El::
   const auto input1_stride = input1_height * input1_width;
   const auto output_stride = output_height * output_width;
 
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_BEGIN("matmul_bp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR
   for (El::Int j = 0; j < mat_depth; ++j){
     auto input0_buffer_start = j * input0_stride;
@@ -178,6 +189,9 @@ void bp_compute_impl(matmul_layer<TensorDataType,data_layout::DATA_PARALLEL,El::
       }
     }    
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("matmul_bp");
+#endif
 }
 
 #ifdef LBANN_HAS_GPU

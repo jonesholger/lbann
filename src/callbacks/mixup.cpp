@@ -31,6 +31,7 @@
 #include "lbann/utils/beta.hpp"
 #include "lbann/utils/exception.hpp"
 #include "lbann/utils/serialize.hpp"
+#include "lbann/utils/profiling.hpp"
 
 #include <callbacks.pb.h>
 
@@ -53,6 +54,9 @@ void mixup::serialize(Archive & ar) {
 }
 
 void mixup::on_forward_prop_end(model *m, Layer *l) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   if (!m_layers.count(l->get_name())) {
     return;
   }

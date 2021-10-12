@@ -146,6 +146,9 @@ void fp_cpu(lbann_comm& comm,
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void in_top_k_layer<TensorDataType, T_layout, Dev>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   fp_cpu(*this->get_comm(),
          this->m_k,
          this->get_prev_activations(),

@@ -202,6 +202,9 @@ void softmax_layer<TensorDataType, Layout, Device>::setup_bp_dnn_descriptors()
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void softmax_layer<TensorDataType, Layout, Device>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   if constexpr (Layout == data_layout::DATA_PARALLEL)
   {
     const auto& local_input =
@@ -230,6 +233,9 @@ void softmax_layer<TensorDataType, Layout, Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void softmax_layer<TensorDataType, Layout, Device>::bp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   if constexpr (Layout == data_layout::DATA_PARALLEL)
   {
     this->setup_bp_dnn_descriptors();

@@ -32,6 +32,7 @@
 #include "lbann/utils/exception.hpp"
 #include "lbann/utils/summary_impl.hpp"
 #include "lbann/utils/timer.hpp"
+#include "lbann/utils/profiling.hpp"
 #include "lbann/weights/data_type_weights.hpp"
 
 #include <callbacks.pb.h>

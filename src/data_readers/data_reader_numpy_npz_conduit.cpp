@@ -34,6 +34,7 @@
 #include "lbann/utils/timer.hpp"
 #include "lbann/trainers/trainer.hpp"
 #include "lbann/utils/lbann_library.hpp"
+#include "lbann/utils/profiling.hpp"
 
 namespace lbann {
 
@@ -254,6 +255,9 @@ bool numpy_npz_conduit_reader::load_numpy_npz_from_file(const std::unordered_set
 }
 
 bool numpy_npz_conduit_reader::fetch_datum(Mat& X, int data_id, int mb_idx) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   Mat X_v = El::View(X, El::IR(0, X.Height()), El::IR(mb_idx, mb_idx+1));
   conduit::Node node;
   if (data_store_active()) {

@@ -71,12 +71,18 @@ void local_bp_cpu(const El::AbstractMatrix<TensorDataType>& local_input,
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void l1_norm_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   local_fp_cpu(this->get_local_prev_activations(),
                this->m_workspace->Matrix());
 }
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void l1_norm_layer<TensorDataType, T_layout, Dev>::local_bp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   local_bp_cpu(this->get_local_prev_activations(),
                this->m_workspace->LockedMatrix(),
                this->get_local_error_signals());

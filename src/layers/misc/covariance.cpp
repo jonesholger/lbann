@@ -147,6 +147,9 @@ void bp_cpu(const El::AbstractDistMatrix<TensorDataType>& input0,
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void covariance_layer<TensorDataType, Layout, Device>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   fp_cpu(this->get_prev_activations(0),
          this->get_prev_activations(1),
          this->get_activations(),
@@ -157,6 +160,9 @@ void covariance_layer<TensorDataType, Layout, Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void covariance_layer<TensorDataType, Layout, Device>::bp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   bp_cpu(this->get_prev_activations(0),
          this->get_prev_activations(1),
          this->get_prev_error_signals(),

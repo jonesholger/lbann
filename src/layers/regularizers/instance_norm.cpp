@@ -75,6 +75,10 @@ void fp_impl(lbann_comm& comm,
   auto local_sqsums = El::View(local_workspace,
                                El::IR(num_channels, 2*num_channels),
                                El::ALL);
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("instance_norm_fp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR_COLLAPSE2
   for (El::Int k = 0; k < local_mini_batch_size; ++k) {
     for (El::Int j = 0; j < num_channels; ++j) {
@@ -112,6 +116,10 @@ void fp_impl(lbann_comm& comm,
       }
     }
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("instance_norm_fp");
+#endif
+
 
 }
 
@@ -185,6 +193,10 @@ void bp_impl(lbann_comm& comm,
                                   El::ALL);
   const TensorDataType mean_scale = 1. / channel_size;
   const TensorDataType var_correction = double(channel_size) / (channel_size - 1);
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("instance_norm_bp");
+#endif
+
   LBANN_OMP_PARALLEL_FOR_COLLAPSE2
   for (El::Int k = 0; k < local_mini_batch_size; ++k) {
     for (El::Int j = 0; j < num_channels; ++j) {
@@ -234,6 +246,10 @@ void bp_impl(lbann_comm& comm,
       }
     }
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("instance_norm_bp");
+#endif
+
 
 }
 

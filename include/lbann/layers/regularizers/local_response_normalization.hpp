@@ -255,6 +255,9 @@ private:
 
   /// CPU implementation of forward propagation
   void fp_compute_cpu() {
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
 
     // Local matrices
     const auto& local_input = this->get_local_prev_activations();
@@ -284,6 +287,9 @@ private:
     // Note: The sum is over entries in the normalization window.
     ////////////////////////////////////////////////////////////////
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("forward_prop_collapse2");
+#endif
     // Iterate through blocks in channels of each data sample
     const int max_block_size = 16;
     LBANN_OMP_PARALLEL_FOR_COLLAPSE2
@@ -335,11 +341,18 @@ private:
 
       }
     }
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_END("forward_prop_collapse2");
+#endif
 
   }
 
   /// CPU implementation of backward propagation
   void bp_compute_cpu() {
+
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_FUNCTION;
+#endif
 
     // Get local matrices
     const auto& local_input = this->get_local_prev_activations();
@@ -379,6 +392,9 @@ private:
     //   window.
     ////////////////////////////////////////////////////////////////
 
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_BEGIN("backward_prop_collapse2");
+#endif
     // Iterate through blocks in channels of each data sample
     const int max_block_size = 16;
     LBANN_OMP_PARALLEL_FOR_COLLAPSE2
@@ -453,6 +469,9 @@ private:
 
       }
     }
+#ifdef LBANN_HAS_CALIPER
+    CALI_MARK_END("backward_prop_collapse2");
+#endif
 
   }
 

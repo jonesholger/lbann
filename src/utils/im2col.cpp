@@ -39,6 +39,9 @@ void im2col(const CPUMatDT<TensorDataType>& im,
             const int * im_pads,
             const int * window_dims,
             const int * window_strides) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Input and output parameters
   const int col_height = col.Height();
@@ -107,7 +110,7 @@ void im2col(const CPUMatDT<TensorDataType>& im,
               window_strides[1], window_strides[0]);
     return;
   }
-
+  printf("Not optimized 1x1 or 2d\n");
   // Iterate through col matrix columns
   LBANN_OMP_PARALLEL_FOR
   for(int col_col = 0; col_col < col_width; ++col_col) {
@@ -399,6 +402,10 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
                const int offset_stride_x,
                const int offset_stride_y) {
 
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
+
   // im2col parameters
   const int offset_start_x = -input_pad_x;
   const int offset_start_y = -input_pad_y;
@@ -409,7 +416,10 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
   const int output_height = num_channels * window_dim_x * window_dim_y;
 
   // Iterate through output matrix entries
-  LBANN_OMP_PARALLEL_FOR_COLLAPSE5
+  //LBANN_OMP_PARALLEL_FOR_COLLAPSE5
+
+  LBANN_OMP_PARALLEL_FOR
+  //#pragma omp parallel for  
   for(int offset_y = 0; offset_y < offset_num_y; ++offset_y) {
     for(int offset_x = 0; offset_x < offset_num_x; ++offset_x) {
       for(int channel = 0; channel < num_channels; ++channel) {

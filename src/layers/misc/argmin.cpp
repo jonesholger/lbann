@@ -38,6 +38,9 @@ void argmin_layer<TensorDataType, Layout, Device>::fp_compute() {
   auto& local_output = dynamic_cast<CPUMatType&>(this->get_local_activations());
   const El::Int local_height = local_input.Height();
   const El::Int local_width = local_input.Width();
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_BEGIN("argmin");
+#endif
   LBANN_OMP_PARALLEL_FOR
   for (El::Int col = 0; col < local_width; ++col) {
     const auto buf_start = local_input.LockedBuffer(0, col);
@@ -46,6 +49,9 @@ void argmin_layer<TensorDataType, Layout, Device>::fp_compute() {
     const auto min_ind = std::distance(buf_start, buf_min);
     local_output(0, col) = static_cast<TensorDataType>(min_ind);
   }
+#ifdef LBANN_HAS_CALIPER
+  CALI_MARK_END("argmin");
+#endif
 }
 
 #define PROTO(T)                     \

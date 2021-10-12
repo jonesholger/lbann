@@ -343,6 +343,9 @@ void gaussian_fill_parallel(
   El::Int n,
   TensorDataType mean,
   TensorDataType stddev) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Type for generating random variables
 #if defined(LBANN_HAS_GPU_FP16) && defined(LBANN_HAS_HALF)

@@ -168,6 +168,9 @@ bool sgd_training_algorithm::train_mini_batch(sgd_execution_context& c,
                                               model& model,
                                               data_coordinator& dc)
 {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   model.reset_mode(c, execution_mode::training);
   dc.reset_mode(c);
   do_batch_begin_cbs(model, execution_mode::training);

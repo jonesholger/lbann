@@ -304,6 +304,9 @@ template <typename TensorDataType, data_layout Layout, El::Device Device>
 void dist_embedding_layer<TensorDataType,Layout,Device>::apply_sparse_sgd_step(
   size_t num_gradients,
   LocalMat& local_embeddings) {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
 
   // Synchronize non-blocking barrier
   // Note: Make sure gradients have been received.

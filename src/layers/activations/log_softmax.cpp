@@ -37,7 +37,6 @@ void fp(lbann_comm& comm,
         const El::AbstractDistMatrix<TensorDataType>& input,
         El::AbstractDistMatrix<TensorDataType>& output,
         El::AbstractDistMatrix<TensorDataType>& workspace) {
-
   // Local matrices
   const auto& local_input = dynamic_cast<const CPUMatDT<TensorDataType>&>(input.LockedMatrix());
   auto& local_output = dynamic_cast<CPUMatDT<TensorDataType>&>(output.Matrix());
@@ -90,7 +89,6 @@ void bp(lbann_comm& comm,
         const El::AbstractDistMatrix<TensorDataType>& gradient_wrt_output,
         El::AbstractDistMatrix<TensorDataType>& gradient_wrt_input,
         El::AbstractDistMatrix<TensorDataType>& workspace) {
-
   // Local matrices
   const auto& local_output = dynamic_cast<const CPUMat&>(output.LockedMatrix());
   const auto& local_gradient_wrt_output = dynamic_cast<const CPUMat&>(gradient_wrt_output.LockedMatrix());
@@ -129,6 +127,9 @@ void bp(lbann_comm& comm,
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void log_softmax_layer<TensorDataType, Layout, Device>::fp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   fp(*this->get_comm(),
      this->get_prev_activations(),
      this->get_activations(),
@@ -136,6 +137,9 @@ void log_softmax_layer<TensorDataType, Layout, Device>::fp_compute() {
 }
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void log_softmax_layer<TensorDataType, Layout, Device>::bp_compute() {
+#ifdef LBANN_HAS_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   bp(*this->get_comm(),
      this->get_activations(),
      this->get_prev_error_signals(),
