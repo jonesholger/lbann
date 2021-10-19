@@ -30,6 +30,7 @@ Model portability & usability:
 
 Experiments & Applications:
  - Example for training Transformer model with D&SP and D&SP-cSub
+ - PROBIESNet model for HRRL data
 
 Internal features:
  - Added operator class
@@ -50,6 +51,8 @@ I/O & data readers:
    take dynamic data fields rather than fixed fields.  Input buffers
    are no long allocated for fields that are not used in active
    models.
+ - Added support in the generic data reader and synthetic data reader
+   clases for arbitrary data fields.
 
 Build system:
 

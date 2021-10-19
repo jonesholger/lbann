@@ -62,6 +62,12 @@ data_reader_synthetic::data_reader_synthetic(int num_samples,
     m_dimensions(dims)
 {
   set_has_labels(true);
+  set_has_data_field(INPUT_DATA_TYPE_SAMPLES, true);
+  set_has_data_field(INPUT_DATA_TYPE_LABELS, true);
+  m_synthetic_data_fields[INPUT_DATA_TYPE_SAMPLES] = dims;
+  m_synthetic_data_fields[INPUT_DATA_TYPE_LABELS] = {num_labels};
+  m_supported_input_types[INPUT_DATA_TYPE_SAMPLES] = true;
+  m_supported_input_types[INPUT_DATA_TYPE_LABELS] = true;
 }
 
 data_reader_synthetic::data_reader_synthetic(int num_samples,
@@ -75,6 +81,34 @@ data_reader_synthetic::data_reader_synthetic(int num_samples,
     m_response_dimensions(response_dims)
 {
   set_has_responses(true);
+  set_has_data_field(INPUT_DATA_TYPE_SAMPLES, true);
+  set_has_data_field(INPUT_DATA_TYPE_RESPONSES, true);
+  m_synthetic_data_fields[INPUT_DATA_TYPE_SAMPLES] = dims;
+  m_synthetic_data_fields[INPUT_DATA_TYPE_RESPONSES] = response_dims;
+  m_supported_input_types[INPUT_DATA_TYPE_SAMPLES] = true;
+  m_supported_input_types[INPUT_DATA_TYPE_RESPONSES] = true;
+}
+
+data_reader_synthetic::data_reader_synthetic(int num_samples,
+                                             std::map<data_field_type, std::vector<int>> data_fields,
+                                             bool shuffle)
+  : generic_data_reader(shuffle),
+    m_num_samples(num_samples),
+    m_synthetic_data_fields(std::move(data_fields))
+{
+  for (auto const& [data_field, dims] : m_synthetic_data_fields) {
+    set_has_data_field(data_field, true);
+  }
+}
+
+bool data_reader_synthetic::fetch_data_field(data_field_type data_field, CPUMat& X, int data_id, int mb_idx) {
+  if (m_synthetic_data_fields.find(data_field) == m_synthetic_data_fields.end()) {
+    LBANN_WARNING("Unknown data field ", data_field);
+    return false;
+  }
+  auto X_v = El::View(X, El::ALL, El::IR(mb_idx, mb_idx + 1));
+  fill_matrix(X_v);
+  return true;
 }
 
 bool data_reader_synthetic::fetch_datum(CPUMat& X, int data_id, int mb_idx) {

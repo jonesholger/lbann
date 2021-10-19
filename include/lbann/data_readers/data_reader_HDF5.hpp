@@ -65,27 +65,21 @@ public:
 
   void load() override;
 
-  /** @brief Called by fetch_data, fetch_label, fetch_response
-   *
-   * Note that 'which' is not confined to the three commonly used
-   * in lbann (datum, label, response); in general, it can be
-   * any pack field in the experiment schema: pack: <string>
-   */
-  bool fetch(data_field_type data_field, CPUMat& Y, int data_id, int mb_idx);
+  bool fetch_data_field(data_field_type data_field, CPUMat& Y, int data_id, int mb_idx) override;
 
   bool fetch_datum(CPUMat& X, int data_id, int mb_idx) override
   {
-    return fetch("datum", X, data_id, mb_idx);
+    return fetch_data_field(INPUT_DATA_TYPE_SAMPLES, X, data_id, mb_idx);
   }
 
   bool fetch_response(CPUMat& Y, int data_id, int mb_idx) override
   {
-    return fetch("response", Y, data_id, mb_idx);
+    return fetch_data_field(INPUT_DATA_TYPE_RESPONSES, Y, data_id, mb_idx);
   }
 
   bool fetch_label(CPUMat& Y, int data_id, int mb_idx) override
   {
-    return fetch("label", Y, data_id, mb_idx);
+    return fetch_data_field(INPUT_DATA_TYPE_LABELS, Y, data_id, mb_idx);
   }
 
   /** @brief Sets the name of the yaml experiment file */
@@ -111,22 +105,22 @@ public:
 
   const std::vector<int> get_data_dims() const override
   {
-    return get_data_dims("datum");
+    return get_data_dims(INPUT_DATA_TYPE_SAMPLES);
   }
 
   int get_linearized_data_size() const override
   {
-    return get_linearized_size("datum");
+    return get_linearized_size(INPUT_DATA_TYPE_SAMPLES);
   }
 
   int get_linearized_response_size() const override
   {
-    return get_linearized_size("response");
+    return get_linearized_size(INPUT_DATA_TYPE_RESPONSES);
   }
 
   int get_linearized_label_size() const override
   {
-    return get_linearized_size("label");
+    return get_linearized_size(INPUT_DATA_TYPE_LABELS);
   }
 
   int get_num_labels() const override { return get_linearized_label_size(); }
@@ -256,7 +250,7 @@ private:
   const std::vector<int> get_data_dims(std::string name = "") const;
 
   /** Returns the size of the requested field (datum, label, response, etc) */
-  int get_linearized_size(std::string const& name) const override;
+  int get_linearized_size(data_field_type const& data_field) const override;
 
   /** P_0 reads and bcasts the schema */
   void load_sample_schema(conduit::Schema& s);
@@ -338,9 +332,13 @@ private:
 
   /** Constructs m_data_dims_lookup_table and m_linearized_size_lookup_table */
   void construct_linearized_size_lookup_tables();
+  void construct_linearized_size_lookup_tables(conduit::Node& node);
 
   /** sanity check; call after adjust_metadata */
   void test_that_all_nodes_contain_metadata(conduit::Node& node);
+
+  bool get_delete_packed_fields() { return m_delete_packed_fields; }
+  void set_delete_packed_fields(bool flag) { m_delete_packed_fields = flag; }
 
   //=========================================================================
   // template declarations follow
