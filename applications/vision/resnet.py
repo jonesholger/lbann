@@ -5,7 +5,6 @@ import lbann.models.resnet
 import lbann.contrib.args
 import lbann.contrib.models.wide_resnet
 import lbann.contrib.launcher
-import data.imagenet
 
 # Command-line arguments
 desc = ('Construct and run ResNet on ImageNet-1K data. '
@@ -128,6 +127,7 @@ obj = lbann.ObjectiveFunction([cross_entropy, l2_reg])
 metrics = [lbann.Metric(top1, name='top-1 accuracy', unit='%'),
            lbann.Metric(top5, name='top-5 accuracy', unit='%')]
 callbacks = [lbann.CallbackPrint(),
+             lbann.CallbackProfiler(),
              lbann.CallbackTimer(),
              lbann.CallbackDropFixedLearningRate(
                  drop_epoch=[30, 60, 80], amt=0.1)]
@@ -145,7 +145,14 @@ model = lbann.Model(args.num_epochs,
 opt = lbann.contrib.args.create_optimizer(args)
 
 # Setup data reader
-data_reader = data.imagenet.make_data_reader(num_classes=args.num_classes)
+data_reader = lbann.reader_pb2.DataReader()
+_reader = data_reader.reader.add()
+_reader.name = 'synthetic'
+_reader.role = 'train'
+_reader.num_samples = args.mini_batch_size*100
+_reader.num_labels = args.num_classes
+_reader.synth_dimensions = '3 224 224'
+_reader.percent_of_data_to_use = 1.0
 
 # Setup trainer
 trainer = lbann.Trainer(mini_batch_size=args.mini_batch_size, random_seed=args.random_seed)
@@ -155,3 +162,4 @@ kwargs = lbann.contrib.args.get_scheduler_kwargs(args)
 lbann.contrib.launcher.run(trainer, model, data_reader, opt,
                            job_name=args.job_name,
                            **kwargs)
+
