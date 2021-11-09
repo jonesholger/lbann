@@ -32,7 +32,7 @@ namespace lbann {
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void sort_layer<TensorDataType, T_layout, Dev>::fp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("sort_layer::fp_compute");
 #endif
 
   // Local matrices
@@ -69,7 +69,7 @@ void sort_layer<TensorDataType, T_layout, Dev>::fp_compute() {
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void sort_layer<TensorDataType, T_layout, Dev>::bp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("sort_layer::bp_compute");
 #endif
 
   // Local matrices

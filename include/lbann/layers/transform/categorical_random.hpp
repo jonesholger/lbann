@@ -78,7 +78,7 @@ class categorical_random_layer : public data_type_layer<TensorDataType> {
   void fp_compute() override {
 
 #ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_SCOPE("categorical_random_layer::fp_compute");
 #endif
     // Input and output matrices
     const auto& input = this->get_prev_activations();

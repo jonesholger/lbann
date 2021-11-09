@@ -70,14 +70,14 @@ acc = lbann.CategoricalAccuracy(probs, labels)
 
 # Setup model
 mini_batch_size = 64
-num_epochs = 1
+num_epochs = 3 
 model = lbann.Model(num_epochs,
                     layers=lbann.traverse_layer_graph([images, labels]),
                     objective_function=loss,
                     metrics=[lbann.Metric(acc, name='accuracy', unit='%')],
                     callbacks=[lbann.CallbackPrintModelDescription(),
                                lbann.CallbackPrint(),
-                               lbann.CallbackProfiler(),
+                               lbann.CallbackProfilerCaliper(skip_init = False),
                                lbann.CallbackTimer()])
 
 # Setup optimizer

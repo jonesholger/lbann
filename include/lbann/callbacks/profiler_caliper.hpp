@@ -23,27 +23,34 @@
 // implied. See the License for the specific language governing
 // permissions and limitations under the license.
 //
-// timer .hpp .cpp - Callback hooks to time training
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef LBANN_CALLBACKS_PROFILER_HPP_INCLUDED
-#define LBANN_CALLBACKS_PROFILER_HPP_INCLUDED
+#ifndef LBANN_CALLBACKS_PROFILER_CALIPER_HPP_INCLUDED
+#define LBANN_CALLBACKS_PROFILER_CALIPER_HPP_INCLUDED
 
 #include "lbann/callbacks/callback.hpp"
+
+#ifdef LBANN_HAS_CALIPER
+#include <caliper/cali.h>
+#include <caliper/cali-manager.h>
+#include <caliper/cali_macros.h>
+#include <adiak.hpp>
+
 
 namespace lbann {
 namespace callback {
 
 /**
  */
-class profiler : public callback_base {
+class profiler_caliper : public callback_base {
  public:
-  profiler(bool sync = false, bool skip_init = false);
-  profiler(const profiler&) = default;
-  profiler& operator=(const profiler&) = default;
-  profiler* copy() const override {
-    return new profiler(*this);
+  profiler_caliper(bool skip_init = true);
+  profiler_caliper(const profiler_caliper&) = default;
+  profiler_caliper& operator=(const profiler_caliper&) = default;
+  profiler_caliper* copy() const override {
+    return new profiler_caliper(*this);
   }
+  ~profiler_caliper();
   void on_epoch_begin(model *m) override;
   void on_epoch_end(model *m) override;
   void on_validation_begin(model *m) override;
@@ -70,7 +77,11 @@ class profiler : public callback_base {
   void on_optimize_end(model *m) override;
   void on_optimize_begin(model *m, weights *w) override;
   void on_optimize_end(model *m, weights *w) override;
-  std::string name() const override { return "profiler"; }
+  std::string name() const override { return "profiler_caliper"; }
+
+  void start() {  // used during skip_init logic
+    m_manager.start();
+  }
 
   /** @name Serialization */
   ///@{
@@ -81,22 +92,45 @@ class profiler : public callback_base {
   ///@}
 
  private:
-  /** Get a color to use in the profiler for a layer. */
-  int get_color(Layer *l);
-  /** Whether to synchronize the when setting up profile regions. */
-  bool m_sync;
+  
+  struct manager_wrapper {
+    cali::ConfigManager manager;
+    bool started = false;
+    manager_wrapper() {
+      std::cout << "Caliper spot adding profile" << std::endl;
+      std::string profile="spot(output=lbann.cali)";
+      manager.add(profile.c_str());
+    }
+    ~manager_wrapper() {
+      if(started) {
+        std::cout << "Caliper spot stop\n" << std::endl;
+        manager.stop();
+        manager.flush();
+      }
+    }
+    void start() {
+      if(!started) {
+        std::cout << "Caliper spot start\n" << std::endl;
+        manager.start();
+        started = true;
+      }
+    }
+
+  };
+
+  manager_wrapper m_manager;
+
   /** Whether to skip initial iterations. */
-  bool m_skip_init;
-
-
+  bool m_skip_init;  // default is to skip first epoch
 };
 
 // Builder function
 std::unique_ptr<callback_base>
-build_profiler_callback_from_pbuf(
+build_profiler_caliper_callback_from_pbuf(
   const google::protobuf::Message&, std::shared_ptr<lbann_summary> const&);
 
 } // namespace callback
 } // namespace lbann
+#endif // ifdef LBANN_HAS_CALIPER
 
-#endif  // LBANN_CALLBACKS_PROFILER_HPP_INCLUDED
+#endif  // LBANN_CALLBACKS_PROFILER_CALIPER_HPP_INCLUDED

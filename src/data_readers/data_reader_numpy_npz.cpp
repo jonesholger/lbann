@@ -71,7 +71,7 @@ namespace lbann {
 
   void numpy_npz_reader::load() {
 #ifdef LBANN_HAS_CALIPER
-   CALI_CXX_MARK_FUNCTION;
+   CALI_CXX_MARK_SCOPE("numpy_npz_reader::load");
 #endif
     std::string infile = get_data_filename();
     // Ensure the file exists.

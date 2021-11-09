@@ -51,6 +51,10 @@ if(LBANN_HAS_ONNX)
   list(APPEND THIS_DIR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/export_onnx.cpp)
 endif ()
 
+if(LBANN_HAS_CALIPER)
+  list(APPEND THIS_DIR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/profiler_caliper.cpp)
+endif ()
+
 # Propagate the files up the tree
 set(SOURCES "${SOURCES}" "${THIS_DIR_SOURCES}" PARENT_SCOPE)
 set(GPU_SOURCES "${GPU_SOURCES}" "${THIS_DIR_CU_SOURCES}" PARENT_SCOPE)

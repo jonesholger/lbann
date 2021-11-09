@@ -153,7 +153,7 @@ void adam<TensorDataType>::step_compute_cpu(AbsDistMatrixType& values,
                                             const AbsDistMatrixType& gradient,
                                             const TensorDataType& correction) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("adam::step_compute");
 #endif
   static const auto one = TensorDataType(1.);
 

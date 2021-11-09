@@ -32,7 +32,7 @@ namespace lbann {
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void channelwise_mean_layer<TensorDataType, Layout, Device>::fp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("channelwise_mean_layer::fp_compute");
 #endif
 
   // Local matrices
@@ -66,7 +66,7 @@ void channelwise_mean_layer<TensorDataType, Layout, Device>::fp_compute() {
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void channelwise_mean_layer<TensorDataType, Layout, Device>::bp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("channelwise_mean_layer::bp_compute");
 #endif
 
   // Local matrices

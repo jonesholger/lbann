@@ -36,7 +36,7 @@ void tessellate_layer<TensorDataType, T_layout, Dev>
                 const El::AbstractMatrix<TensorDataType>& input,
                 El::AbstractDistMatrix<TensorDataType>& output) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("tessellate_layer::fp_compute_3d");
 #endif
 
   // Input matrix
@@ -91,7 +91,7 @@ void tessellate_layer<TensorDataType, T_layout, Dev>
                 const El::AbstractDistMatrix<TensorDataType>& output_grad,
                 El::AbstractMatrix<TensorDataType>& input_grad) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("tessellate_layer::bp_compute_3d");
 #endif
 
   // Input grad matrix

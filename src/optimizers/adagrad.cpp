@@ -83,7 +83,7 @@ template <typename TensorDataType>
 void adagrad<TensorDataType>::step_compute_cpu(AbsDistMatrixType& values,
                                                const AbsDistMatrixType& gradient) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("adagrad::step_compute");
 #endif
 
   // Get local matrix data

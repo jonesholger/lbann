@@ -196,6 +196,9 @@ private:
 #ifndef LBANN_HAS_DNN_LIB
     LBANN_ERROR("DNN libary not detected");
 #else
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_SCOPE("local_response_normalization::fp_compute");
+#endif
     // Initialize GPU workspace
     El::Matrix<TensorDataType, El::Device::GPU> workspace;
     size_t workspace_size = dnn_lib::get_lrn_ws_size(m_tensors_dnn_desc.get_activations());
@@ -224,6 +227,9 @@ private:
 #ifndef LBANN_HAS_DNN_LIB
     LBANN_ERROR("DNN library not detected");
 #else
+#ifdef LBANN_HAS_CALIPER
+    CALI_CXX_MARK_SCOPE("local_response_normalization::bp_compute");
+#endif
     // Initialize GPU workspace
     El::Matrix<TensorDataType, El::Device::GPU> workspace;
     size_t workspace_size = dnn_lib::get_lrn_ws_size(m_tensors_dnn_desc.get_activations());
@@ -256,7 +262,7 @@ private:
   /// CPU implementation of forward propagation
   void fp_compute_cpu() {
 #ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_SCOPE("local_response_normalization::fp_compute");
 #endif
 
     // Local matrices
@@ -351,7 +357,7 @@ private:
   void bp_compute_cpu() {
 
 #ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_SCOPE("local_response_normalization::bp_compute");
 #endif
 
     // Get local matrices

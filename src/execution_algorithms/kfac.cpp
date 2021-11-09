@@ -283,7 +283,7 @@ bool KFAC::train_mini_batch(
   data_coordinator& dc)
 {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("KRAC::train_mini_batch");
 #endif
   auto& sgd_context = kfac_context.get_sgd_execution_context();
 

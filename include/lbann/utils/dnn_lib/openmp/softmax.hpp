@@ -50,9 +50,6 @@ void openmp_backend::softmax_forward(
   softmax_mode mode,
   softmax_alg alg)
 {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
   if (alg == softmax_alg::LOG)
     return logsoftmax_forward(alpha_in,
                               inputDesc,
@@ -136,9 +133,6 @@ void openmp_backend::softmax_backward(
   softmax_mode mode,
   softmax_alg alg)
 {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
   if (alg == softmax_alg::LOG)
     return logsoftmax_backward(alpha_in,
                                outputDesc,

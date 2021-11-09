@@ -150,7 +150,7 @@ class unpooling_layer : public data_type_layer<TensorDataType> {
   void fp_compute_im2col() {
 
 #ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_SCOPE("unpooling_layer::fp_compute_im2col");
 #endif
     using DMatDT = El::Matrix<TensorDataType, Dev>;
 
@@ -216,8 +216,9 @@ class unpooling_layer : public data_type_layer<TensorDataType> {
   void bp_compute_im2col() {
 
 #ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_FUNCTION;
+    CALI_CXX_MARK_SCOPE("unpooling_layer::bp_compute_im2col");
 #endif
+
     using DMatDT = El::Matrix<TensorDataType, Dev>;
 
     // Get pooling layer

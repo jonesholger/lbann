@@ -83,6 +83,7 @@ message Callback {
     CallbackComputeModelSize compute_model_size = 51;
     CallbackPerturbWeights perturb_weights = 52;
     CallbackExportOnnx export_onnx = 53;
+    CallbackProfilerCaliper profiler_caliper = 54;
   }
 
   message CallbackLTFB {
@@ -127,6 +128,7 @@ message Callback {
     bool skip_init = 2;
   }
 
+  
   message CallbackTimer {
   }
 
@@ -424,4 +426,9 @@ message Callback {
     bool print_debug_string = 1; // print debug string to stdout
     string output_file = 2; // name of onnx output file
   }
+  
+  message CallbackProfilerCaliper {
+    bool skip_init = 1;
+  }
+
 }

@@ -231,7 +231,7 @@ void abstract_evaluation_layer<TensorDataType>::setup_data(size_t max_mini_batch
 template <typename TensorDataType>
 void abstract_evaluation_layer<TensorDataType>::fp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("abstract_evaluation_layer::fp_compute");
 #endif
   switch (this->get_device_allocation()) {
   case El::Device::CPU:
@@ -256,7 +256,7 @@ void abstract_evaluation_layer<TensorDataType>::fp_compute() {
 template <typename TensorDataType>
 void abstract_evaluation_layer<TensorDataType>::bp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("abstract_evaluation_layer::bp_compute");
 #endif
   const auto& context = static_cast<sgd_execution_context&>(this->m_model->get_execution_context());
   const auto mini_batch_size = context.get_effective_mini_batch_size();

@@ -120,7 +120,7 @@ template <typename TensorDataType>
 void sgd<TensorDataType>::momentum_step_cpu(AbsDistMatrixType& values,
                                             const AbsDistMatrixType& gradient) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("sgd::momentum_step");
 #endif
 
   // Get local matrix data

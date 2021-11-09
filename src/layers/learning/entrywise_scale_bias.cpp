@@ -36,7 +36,7 @@ void fp_impl(const El::Matrix<TensorDataType, El::Device::CPU>& local_input,
              El::Matrix<TensorDataType, El::Device::CPU>& local_output,
              El::Matrix<TensorDataType, El::Device::CPU> const& local_scale_bias) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("entrywise_scale_bias::fp_impl");
 #endif
 
   // Local matrices
@@ -69,7 +69,7 @@ void bp_impl(
   El::Matrix<TensorDataType, El::Device::CPU> const& local_scale_bias,
   El::AbstractDistMatrix<TensorDataType>& gradient_wrt_scale_bias) {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("entrywise_scale_bias::bp_impl");
 #endif
 
   using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;

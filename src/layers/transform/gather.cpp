@@ -32,7 +32,7 @@ namespace lbann {
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void gather_layer<TensorDataType, Layout, Device>::fp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("gather_layer::fp_compute");
 #endif
 
   // Local matrices
@@ -85,7 +85,7 @@ void gather_layer<TensorDataType, Layout, Device>::fp_compute() {
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void gather_layer<TensorDataType, Layout, Device>::bp_compute() {
 #ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
+  CALI_CXX_MARK_SCOPE("gather_layer::bp_compute");
 #endif
 
   // Local matrices
