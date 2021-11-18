@@ -39,9 +39,6 @@ void im2col(const CPUMatDT<TensorDataType>& im,
             const int * im_pads,
             const int * window_dims,
             const int * window_strides) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
 
   // Input and output parameters
   const int col_height = col.Height();
@@ -401,10 +398,6 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
                const int window_dim_y,
                const int offset_stride_x,
                const int offset_stride_y) {
-
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
 
   // im2col parameters
   const int offset_start_x = -input_pad_x;

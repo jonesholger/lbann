@@ -196,9 +196,6 @@ private:
 #ifndef LBANN_HAS_DNN_LIB
     LBANN_ERROR("DNN libary not detected");
 #else
-#ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_SCOPE("local_response_normalization::fp_compute");
-#endif
     // Initialize GPU workspace
     El::Matrix<TensorDataType, El::Device::GPU> workspace;
     size_t workspace_size = dnn_lib::get_lrn_ws_size(m_tensors_dnn_desc.get_activations());
@@ -227,9 +224,6 @@ private:
 #ifndef LBANN_HAS_DNN_LIB
     LBANN_ERROR("DNN library not detected");
 #else
-#ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_SCOPE("local_response_normalization::bp_compute");
-#endif
     // Initialize GPU workspace
     El::Matrix<TensorDataType, El::Device::GPU> workspace;
     size_t workspace_size = dnn_lib::get_lrn_ws_size(m_tensors_dnn_desc.get_activations());
@@ -261,10 +255,6 @@ private:
 
   /// CPU implementation of forward propagation
   void fp_compute_cpu() {
-#ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_SCOPE("local_response_normalization::fp_compute");
-#endif
-
     // Local matrices
     const auto& local_input = this->get_local_prev_activations();
     auto& local_output = this->get_local_activations();
@@ -293,9 +283,6 @@ private:
     // Note: The sum is over entries in the normalization window.
     ////////////////////////////////////////////////////////////////
 
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_BEGIN("forward_prop_collapse2");
-#endif
     // Iterate through blocks in channels of each data sample
     const int max_block_size = 16;
     LBANN_OMP_PARALLEL_FOR_COLLAPSE2
@@ -347,19 +334,10 @@ private:
 
       }
     }
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_END("forward_prop_collapse2");
-#endif
-
   }
 
   /// CPU implementation of backward propagation
   void bp_compute_cpu() {
-
-#ifdef LBANN_HAS_CALIPER
-    CALI_CXX_MARK_SCOPE("local_response_normalization::bp_compute");
-#endif
-
     // Get local matrices
     const auto& local_input = this->get_local_prev_activations();
     const auto& local_output = this->get_local_activations();
@@ -398,9 +376,6 @@ private:
     //   window.
     ////////////////////////////////////////////////////////////////
 
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_BEGIN("backward_prop_collapse2");
-#endif
     // Iterate through blocks in channels of each data sample
     const int max_block_size = 16;
     LBANN_OMP_PARALLEL_FOR_COLLAPSE2
@@ -475,10 +450,6 @@ private:
 
       }
     }
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_END("backward_prop_collapse2");
-#endif
-
   }
 
 };

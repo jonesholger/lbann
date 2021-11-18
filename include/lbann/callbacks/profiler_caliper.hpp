@@ -35,6 +35,7 @@
 #include <caliper/cali-manager.h>
 #include <caliper/cali_macros.h>
 #include <adiak.hpp>
+#include "adiak_config.hpp"
 
 
 namespace lbann {

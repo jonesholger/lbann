@@ -82,6 +82,10 @@ operator=(data_type_layer const& other) {
 
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::forward_prop() {
+#ifdef LBANN_HAS_CALIPER
+  std::string mark = this->get_type() + "_layer::fp_compute";
+  CALI_CXX_MARK_SCOPE(mark.c_str());
+#endif
   const auto fp_start = get_time();
 
   // Setup weights proxies
@@ -135,6 +139,10 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::forward_prop() 
 
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::back_prop_impl_() {
+#ifdef LBANN_HAS_CALIPER
+  std::string mark = this->get_type() + "_layer::bp_compute";
+  CALI_CXX_MARK_SCOPE(mark.c_str());
+#endif
   const auto bp_start = get_time();
 
   // Setup tensors

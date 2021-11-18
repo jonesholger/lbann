@@ -201,10 +201,6 @@ void fp_cpu(lbann_comm& comm,
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void categorical_accuracy_layer<TensorDataType, T_layout, Dev>::fp_compute() {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("categorical_accuracy_layer::fp_compute");
-#endif
-
   fp_cpu(*this->get_comm(),
          this->get_prev_activations(0),
          this->get_prev_activations(1),

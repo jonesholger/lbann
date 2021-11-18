@@ -466,6 +466,10 @@ if (LBANN_WITH_CALIPER)
   if(caliper_FOUND AND adiak_FOUND)
     set(LBANN_HAS_CALIPER TRUE)
     message(STATUS "LBANN_WITH_CALIPER")
+    configure_file(
+      "${CMAKE_SOURCE_DIR}/cmake/configure_files/adiak_config.hpp.in"
+      "${CMAKE_BINARY_DIR}/adiak_config.hpp"
+      @ONLY)
   else ()
     set(LBANN_HAS_CALIPER FALSE)
     set(LBANN_WITH_CALIPER OFF)
