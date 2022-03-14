@@ -29,6 +29,7 @@
 #define LBANN_CALLBACKS_PROFILER_CALIPER_HPP_INCLUDED
 
 #include "lbann/callbacks/callback.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 
 #ifdef LBANN_HAS_CALIPER
 #include <caliper/cali.h>

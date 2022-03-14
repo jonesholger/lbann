@@ -37,6 +37,7 @@
 #include <regex>
 
 namespace lbann {
+
 namespace callback {
 
 using namespace std;
@@ -129,7 +130,7 @@ void profiler_caliper::serialize(Archive & ar) {
 }
 
 void profiler_caliper::on_epoch_begin(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   static int epochs = 0;
   epochs++;
 
@@ -264,6 +265,8 @@ build_profiler_caliper_callback_from_pbuf(
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::profiler_caliper
+#define LBANN_CLASS_LIBNAME callback_profiler_caliper
 #include <lbann/macros/register_class_with_cereal.hpp>
+
 #endif // LBANN_HAS_CALIPER
 
