@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -45,15 +45,17 @@ class input_distconv_adapter: public data_type_distconv_adapter<TensorDataType> 
   using TensorHost = dc::TensorHost<TensorDataType>;
   using TensorHostShuffler = dc::TensorHostShuffler<TensorDataType>;
 
-  input_distconv_adapter(Layer& layer, const bool shuffle_required);
+  input_distconv_adapter(
+    Layer& layer,
+    data_field_type data_field,
+    const bool shuffle_required);
   virtual ~input_distconv_adapter() = default;
 
-  TensorHostShuffler &get_shuffler(const TensorHost &src, const TensorHost &dst,
-                                   int mat_idx);
+  TensorHostShuffler &get_shuffler(const TensorHost &src, const TensorHost &dst);
   void setup_fp_tensors() override;
   std::unique_ptr<TensorDevType> setup_activations_i(int index) const override;
   dc::Shape get_activations_local_shape(int index) const override;
-  dc::Shape get_activations_shape(int index) const;
+  dc::Shape get_activations_shape(int index) const override;
   void setup_shuffler_buffers(const TensorHost &src, const TensorHost &dst);
 
   // No bp tensors needed for this layer.
@@ -69,15 +71,18 @@ class input_distconv_adapter: public data_type_distconv_adapter<TensorDataType> 
   // Nothing to do here as everything is done in fp_compute_distconv.
   void fp_setup(El::Int mini_batch_size) override {}
   void fp_compute();
-  bool is_input_processed(size_t index) const;
 
  private:
-  std::vector<bool> m_is_input_processed;
-  std::vector<std::unique_ptr<TensorHost>> m_original_host_tensors;
-  std::vector<std::unique_ptr<TensorHost>> m_host_tensors;
+
+  /// @brief Data field accessed by corresponding input layer
+  data_field_type m_data_field;
+
+  bool m_is_input_processed;
+  std::unique_ptr<TensorHost> m_original_host_tensor;
+  std::unique_ptr<TensorHost> m_host_tensor;
 
   const bool m_shuffle_required;
-  std::vector<std::array<std::unique_ptr<TensorHostShuffler>, 4>> m_shufflers;
+  std::array<std::unique_ptr<TensorHostShuffler>, 4> m_shufflers;
   std::unique_ptr<TensorDataType> m_shuffler_src_buf;
   size_t m_shuffler_src_buf_size = 0;
   std::unique_ptr<TensorDataType> m_shuffler_dst_buf;
@@ -88,7 +93,7 @@ class input_distconv_adapter: public data_type_distconv_adapter<TensorDataType> 
 };
 #endif // LBANN_HAS_DISTCONV
 
-/** @brief Interface with data reader. */
+/** @brief Interface with data reader */
 template <typename TensorDataType,
           data_layout T_layout = data_layout::DATA_PARALLEL,
           El::Device Dev = El::Device::CPU>
@@ -184,12 +189,13 @@ class input_layer : public data_type_layer<TensorDataType> {
     return Dev == El::Device::CPU && T_layout == data_layout::DATA_PARALLEL;
   }
   void setup_distconv_adapter(const DataReaderMetaData& dr_metadata) override {
-    this->get_distconv_adapter_ptr() = make_unique<distconv_adapter_type>(
-        *this, dr_metadata.shuffle_required);
+    this->get_distconv_adapter_ptr() = std::make_unique<distconv_adapter_type>(
+      *this, m_data_field, dr_metadata.shuffle_required);
   }
   distconv_adapter_type& get_distconv_adapter() override;
   const distconv_adapter_type& get_distconv_adapter() const override;
   bool keep_original_outputs(int index) const override;
+  bool keep_original_gradient_wrt_outputs(int index) const override;
 ///@}
 #endif // LBANN_HAS_DISTCONV
 };

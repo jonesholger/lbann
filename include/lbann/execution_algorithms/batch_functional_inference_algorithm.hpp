@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2016, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -29,7 +29,7 @@
 
 #include "lbann/callbacks/callback.hpp"
 #include "lbann/data_coordinator/data_coordinator.hpp"
-#include "lbann/execution_contexts/sgd_execution_context.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 #include "lbann/layers/data_type_layer.hpp"
 #include "lbann/layers/io/input_layer.hpp"
 #include "lbann/models/model.hpp"
@@ -89,7 +89,7 @@ public:
     // Create an SGD_execution_context so that layer.forward_prop can get the
     // mini_batch_size - This should be fixed in the future, when SGD is not so
     // hard-coded into the model & layers
-    auto c = sgd_execution_context(execution_mode::inference, mbs);
+    auto c = SGDExecutionContext(execution_mode::inference, mbs);
     model->reset_mode(c, execution_mode::inference);
 
     // Infer on mini batches

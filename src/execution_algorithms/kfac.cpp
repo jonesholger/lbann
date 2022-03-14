@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2016, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -69,7 +69,7 @@ KFAC::KFAC(
   double learning_rate_factor,
   double learning_rate_factor_gru,
   size_t compute_interval)
-  : BaseType{std::move(name)},
+  : TrainingAlgorithm{std::move(name)},
     m_stopping_criteria{std::move(stop)},
     m_damping_act_params{std::move(damping_act_params)},
     m_damping_err_params{std::move(damping_err_params)},
@@ -90,54 +90,11 @@ KFAC::KFAC(
     m_compute_interval{compute_interval}
 {}
 
-KFAC::KFAC(KFAC const& other)
-  : BaseType(other.get_name()),
-    m_stopping_criteria{other.m_stopping_criteria->clone()},
-    m_damping_act_params{other.m_damping_act_params},
-    m_damping_err_params{other.m_damping_err_params},
-    m_damping_bn_act_params{other.m_damping_bn_act_params},
-    m_damping_bn_err_params{other.m_damping_bn_err_params},
-    m_damping_warmup_steps{other.m_damping_warmup_steps},
-    m_kronecker_decay{other.m_kronecker_decay},
-    m_print_time{other.m_print_time},
-    m_print_matrix{other.m_print_matrix},
-    m_print_matrix_summary{other.m_print_matrix_summary},
-    m_use_pi{other.m_use_pi},
-    m_update_intervals{other.m_update_intervals},
-    m_update_interval_steps{other.m_update_interval_steps},
-    m_inverse_strategy{other.m_inverse_strategy},
-    m_disable_layers{other.m_disable_layers},
-    m_learning_rate_factor{other.m_learning_rate_factor},
-    m_compute_interval{other.m_compute_interval}
-{}
-
-KFAC& KFAC::operator=(KFAC const& other) {
-  BaseType::operator=(other);
-  m_stopping_criteria = other.m_stopping_criteria->clone();
-  m_damping_act_params = other.m_damping_act_params;
-  m_damping_err_params = other.m_damping_err_params;
-  m_damping_bn_act_params = other.m_damping_bn_act_params;
-  m_damping_bn_err_params = other.m_damping_bn_err_params;
-  m_damping_warmup_steps = other.m_damping_warmup_steps;
-  m_kronecker_decay = other.m_kronecker_decay;
-  m_print_time = other.m_print_time;
-  m_print_matrix = other.m_print_matrix;
-  m_print_matrix_summary = other.m_print_matrix_summary;
-  m_use_pi = other.m_use_pi;
-  m_update_intervals = other.m_update_intervals;
-  m_update_interval_steps = other.m_update_interval_steps;
-  m_inverse_strategy = other.m_inverse_strategy;
-  m_disable_layers = other.m_disable_layers;
-  m_learning_rate_factor = other.m_learning_rate_factor;
-  m_compute_interval = other.m_compute_interval;
-  return *this;
-}
-
 std::string KFAC::get_type() const { return "KFAC"; }
 
-kfac::ExecutionContext* KFAC::do_get_new_execution_context() const
+kfac::KFACExecutionContext* KFAC::do_get_new_execution_context() const
 {
-  return new kfac::ExecutionContext(
+  return new kfac::KFACExecutionContext(
     0UL,
     m_damping_act_params[0],
     m_damping_err_params[0],
@@ -150,7 +107,7 @@ kfac::ExecutionContext* KFAC::do_get_new_execution_context() const
 // =============================================
 
 void KFAC::apply(
-  execution_context& context_,
+  ExecutionContext& context_,
   model& model,
   data_coordinator& dc,
   execution_mode mode)
@@ -160,9 +117,10 @@ void KFAC::apply(
     train(context, model, dc, *m_stopping_criteria);
   }
   else {
-    sgd_training_algorithm eval_algo(
+    SGDTrainingAlgorithm eval_algo(
       this->get_name()+"_eval",
-      m_stopping_criteria->clone());
+      m_stopping_criteria->clone(),
+      /*suppress_timer=*/true);
     auto& eval_context = context.get_sgd_execution_context();
     eval_algo.apply(eval_context, model, dc, mode);
   }
@@ -230,7 +188,7 @@ void KFAC::train(
         // its own context that we needn't know about.
         if (dc.is_execution_mode_valid(execution_mode::validation)) {
           const execution_mode eval_mode = execution_mode::validation;
-          sgd_execution_context eval_context(
+          SGDExecutionContext eval_context(
             eval_mode,
             dc.get_mini_batch_size(eval_mode));
           // FIXME (trb 05/05/2021): This hacks around a bad assumption
@@ -241,9 +199,10 @@ void KFAC::train(
             eval_context.inc_epoch();
             ++num_validation_epochs;
           }
-          sgd_training_algorithm eval_algo(
+          SGDTrainingAlgorithm eval_algo(
             this->get_name()+"_eval",
-            make_unique<epoch_termination_criteria>(num_validation_epochs));
+            std::make_unique<EpochTerminationCriteria>(num_validation_epochs),
+            /*suppress_timer=*/true);
           eval_algo.apply(eval_context, model, dc, eval_mode);
 
           // FIXME (trb 06/07/21): The early stopping callback is part
@@ -420,8 +379,8 @@ void KFAC::do_epoch_end_cbs(model& model)
 
 void KFAC::do_batch_begin_cbs(model& model)
 {
-  sgd_execution_context& c =
-    static_cast<sgd_execution_context&>(model.get_execution_context());
+  SGDExecutionContext& c =
+    static_cast<SGDExecutionContext&>(model.get_execution_context());
   for (const auto& cb : model.get_callbacks()) {
     if (c.get_step() % cb->get_batch_interval() == 0) {
       cb->on_batch_begin(&model);
@@ -431,8 +390,8 @@ void KFAC::do_batch_begin_cbs(model& model)
 
 void KFAC::do_batch_end_cbs(model& model)
 {
-  sgd_execution_context& c =
-    static_cast<sgd_execution_context&>(model.get_execution_context());
+  SGDExecutionContext& c =
+    static_cast<SGDExecutionContext&>(model.get_execution_context());
   for (const auto& cb : model.get_callbacks()) {
     if (c.get_step() % cb->get_batch_interval() == 0) {
       cb->on_batch_end(&model);
@@ -1112,18 +1071,18 @@ std::unique_ptr<lbann::KFAC> lbann::make<lbann::KFAC>(
   // SGD parameters
   auto const& sgd_params = kfac_params.sgd();
   auto const& stopping_criteria = sgd_params.stopping_criteria();
-  std::unique_ptr<lbann::sgd_termination_criteria> stopping;
+  std::unique_ptr<SGDTerminationCriteria> stopping;
   switch (stopping_criteria.criterion_case()) {
   case lbann_data::SGD::TerminationCriteria::kMaxBatches:
-    stopping = lbann::make_unique<lbann::batch_termination_criteria>(
+    stopping = std::make_unique<BatchTerminationCriteria>(
       stopping_criteria.max_batches());
     break;
   case lbann_data::SGD::TerminationCriteria::kMaxEpochs:
-    stopping = lbann::make_unique<lbann::epoch_termination_criteria>(
+    stopping = std::make_unique<EpochTerminationCriteria>(
       stopping_criteria.max_epochs());
     break;
   case lbann_data::SGD::TerminationCriteria::kMaxSeconds:
-    stopping = lbann::make_unique<lbann::seconds_termination_criteria>(
+    stopping = std::make_unique<SecondsTerminationCriteria>(
       stopping_criteria.max_seconds());
     //LBANN_ERROR("Time-based training not yet supported in SGD.");
     break;
@@ -1197,7 +1156,7 @@ std::unique_ptr<lbann::KFAC> lbann::make<lbann::KFAC>(
   if(learning_rate_factor_gru == 0.0)
     learning_rate_factor_gru = learning_rate_factor;
 
-  return make_unique<AlgoType>(
+  return std::make_unique<AlgoType>(
     params.name(),
     std::move(stopping),
     std::move(damping_act_params),

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -289,6 +289,11 @@ void bp_compute_impl(log_softmax_layer<TensorDataType, data_layout::DATA_PARALLE
 template <typename TensorDataType>
 void fp_compute_impl(log_softmax_layer<TensorDataType, data_layout::MODEL_PARALLEL, El::Device::GPU>& l) {
   using GPUMatType = El::Matrix<TensorDataType, El::Device::GPU>;
+
+  // Setup workspace
+  l.m_workspace->Empty(false);
+  l.m_workspace->AlignWith(l.get_activations());
+  l.m_workspace->Resize(1, l.get_activations().Width());
 
   // Local matrices
   const auto& local_input = dynamic_cast<const GPUMatType&>(l.get_local_prev_activations());

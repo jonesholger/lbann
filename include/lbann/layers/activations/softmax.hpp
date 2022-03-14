@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -118,8 +118,8 @@ public:
     this->set_output_dims(this->get_input_dims());
   }
 
-  void setup_matrices(const El::Grid& grid) final {
-    data_type_layer<TensorDataType>::setup_matrices(grid);
+  void setup_data(size_t max_mini_batch_size) override {
+    data_type_layer<TensorDataType>::setup_data(max_mini_batch_size);
     auto dist = this->get_prev_activations().DistData();
     dist.colDist = El::STAR;
     m_workspace.reset(AbsDistMatrixType::Instantiate(dist));
@@ -133,23 +133,6 @@ public:
       m_tensors_dnn_desc.set_layer(this);
 #endif // LBANN_HAS_DNN_LIB
 
-  }
-
-  void fp_setup_outputs(El::Int mini_batch_size) final {
-    data_type_layer<TensorDataType>::fp_setup_outputs(mini_batch_size);
-    // The data parallel implementations do not use a workspace. Thus,
-    // we only need to allocate a workspace when we are in model
-    // parallel mode.
-    if constexpr (Layout == data_layout::MODEL_PARALLEL)
-    {
-      const auto& dist_data = this->get_prev_activations().DistData();
-      m_workspace->Empty(false);
-      m_workspace->AlignWith(dist_data);
-      m_workspace->Resize(1, mini_batch_size);
-    }
-
-    // Setup the descriptors
-    this->setup_fp_dnn_descriptors();
   }
 
   void fp_compute() final;
@@ -180,13 +163,22 @@ private:
 #endif
   using dnnTensorDescriptor = typename dnn_backend::TensorDescriptor;
 
+  /** @brief Descriptor for local input tensor
+   *  @details Only used for data-parallel, CPU implementation.
+   */
   dnnTensorDescriptor input_descriptor_;
+  /** @brief Descriptor for local output tensor
+   *  @details Only used for data-parallel, CPU implementation.
+   */
   dnnTensorDescriptor output_descriptor_;
+  /** @brief Descriptor for local input gradient tensor
+   *  @details Only used for data-parallel, CPU implementation.
+   */
   dnnTensorDescriptor grad_wrt_input_descriptor_;
+  /** @brief Descriptor for local output gradient tensor
+   *  @details Only used for data-parallel, CPU implementation.
+   */
   dnnTensorDescriptor grad_wrt_output_descriptor_;
-
-  void setup_fp_dnn_descriptors();
-  void setup_bp_dnn_descriptors();
 
   ///@}
 
@@ -196,7 +188,10 @@ private:
   /** Softmax mode. */
   softmax_mode m_mode;
 
-  /** Workspace for column-wise reductions. */
+  /** @brief Workspace for column-wise reductions
+   *
+   *  Only used for model-parallel implementation.
+   */
   std::unique_ptr<AbsDistMatrixType> m_workspace;
 
 #ifdef LBANN_HAS_DNN_LIB
@@ -218,7 +213,7 @@ private:
     return Device == El::Device::GPU && Layout == data_layout::DATA_PARALLEL;
   }
   void setup_distconv_adapter(const DataReaderMetaData& dr_metadata) final {
-    this->get_distconv_adapter_ptr() = make_unique<softmax_distconv_adapter<
+    this->get_distconv_adapter_ptr() = std::make_unique<softmax_distconv_adapter<
       TensorDataType, Layout, Device>>(*this);
   }
   softmax_distconv_adapter<TensorDataType, Layout, Device>& get_distconv_adapter() final;
@@ -274,7 +269,7 @@ void softmax_distconv_adapter<TensorDataType, T_layout, Dev>::setup_layer(
     size_t workspace_capacity) {
   auto &l = dynamic_cast<softmax_layer<TensorDataType, T_layout, Dev>&>(
       this->layer());
-  m_softmax = make_unique<dc::Softmax>(dc::get_backend());
+  m_softmax = std::make_unique<dc::Softmax>(dc::get_backend());
   auto mode = l.m_mode == softmax_mode::INSTANCE ?
                           ::distconv::SoftmaxMode::INSTANCE :
       ::distconv::SoftmaxMode::CHANNEL;

@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -126,11 +126,11 @@ public:
     return *m_active_trainer;
   }
 
-  inline void set_active_training_algorithm(training_algorithm* t){
+  inline void set_active_training_algorithm(TrainingAlgorithm* t){
     m_active_training_algorithm = t;
   }
 
-  inline training_algorithm& get_active_training_algorithm(){
+  inline TrainingAlgorithm& get_active_training_algorithm(){
     if(m_active_training_algorithm == nullptr) {
       LBANN_ERROR("No active training algorithm for the checkpoint callback");
     }
@@ -220,7 +220,7 @@ private:
     size_t step);
 private:
   trainer* m_active_trainer;
-  training_algorithm* m_active_training_algorithm;
+  TrainingAlgorithm* m_active_training_algorithm;
   std::string m_checkpoint_dir;
   // If the restart directory is not explicity set, default to the
   // checkpoint directory

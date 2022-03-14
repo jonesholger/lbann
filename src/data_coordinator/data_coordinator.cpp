@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -71,10 +71,10 @@ void data_coordinator::setup(thread_pool& io_thread_pool, int max_mini_batch_siz
   }
 
   auto& arg_parser = global_argument_parser();
-  if (arg_parser.get<bool>(USE_DATA_STORE) ||
-      arg_parser.get<bool>(PRELOAD_DATA_STORE) ||
-      arg_parser.get<bool>(DATA_STORE_CACHE) ||
-      arg_parser.get<std::string>(DATA_STORE_SPILL) != "") {
+  if (arg_parser.get<bool>(LBANN_OPTION_USE_DATA_STORE) ||
+      arg_parser.get<bool>(LBANN_OPTION_PRELOAD_DATA_STORE) ||
+      arg_parser.get<bool>(LBANN_OPTION_DATA_STORE_CACHE) ||
+      arg_parser.get<std::string>(LBANN_OPTION_DATA_STORE_SPILL) != "") {
     bool master = m_comm->am_world_master();
     if (master) {
       std::cout << "\nUSING DATA STORE!\n\n";

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -65,7 +65,7 @@ void print_statistics::setup(model *m) {
 }
 
 void print_statistics::on_epoch_begin(model *m) {
-  const auto& c = static_cast<const sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<const SGDExecutionContext&>(m->get_execution_context());
   data_coordinator& dc = get_trainer().get_data_coordinator();
   lbann_comm *comm = m->get_comm();
   if (comm->am_world_master()) {
@@ -154,7 +154,7 @@ void print_statistics::on_test_end(model *m) {
 }
 
 void print_statistics::report_results(model *m) {
-  const auto& c = static_cast<const sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<const SGDExecutionContext&>(m->get_execution_context());
   lbann_comm *comm = m->get_comm();
 
   // Get string for execution mode
@@ -185,7 +185,7 @@ void print_statistics::report_results(model *m) {
 
     auto& arg_parser = global_argument_parser();
     bool allow_global_statistics =
-      arg_parser.get<bool>(LTFB_ALLOW_GLOBAL_STATISTICS);
+      arg_parser.get<bool>(LBANN_OPTION_LTFB_ALLOW_GLOBAL_STATISTICS);
     std::stringstream report;
 
     // Report objective function value
@@ -305,7 +305,7 @@ build_print_statistics_callback_from_pbuf(
   const google::protobuf::Message& proto_msg, const std::shared_ptr<lbann_summary>&) {
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackPrint&>(proto_msg);
-  return make_unique<print_statistics>(params.interval(),
+  return std::make_unique<print_statistics>(params.interval(),
                                            params.print_global_stat_only());
 }
 
@@ -313,4 +313,5 @@ build_print_statistics_callback_from_pbuf(
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::print_statistics
+#define LBANN_CLASS_LIBNAME callback_print_statistics
 #include <lbann/macros/register_class_with_cereal.hpp>

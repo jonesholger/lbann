@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -110,12 +110,6 @@ __global__ void bp_kernel(El::Int num_embeddings,
 }
 
 } // namespace
-
-template <typename TensorDataType, data_layout T_layout, El::Device Dev>
-void embedding_layer<TensorDataType, T_layout, Dev>::setup_matrices(const El::Grid& grid) {
-  data_type_layer<TensorDataType>::setup_matrices(grid);
-  this->m_embeddings_grad.reset(new El::DistMatrix<TensorDataType, El::STAR, El::STAR, El::ELEMENT, El::Device::GPU>(grid));
-}
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void embedding_layer<TensorDataType, T_layout, Dev>::fp_compute() {

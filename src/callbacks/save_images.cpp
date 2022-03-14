@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -157,7 +157,7 @@ void save_images::serialize(Archive & ar) {
 }
 
 void save_images::on_epoch_end(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   save_image(build_string(m_image_prefix, "epoch", c.get_epoch()),
              m_image_format,
              m->get_layers(),
@@ -177,7 +177,7 @@ build_save_images_callback_from_pbuf(
   const std::shared_ptr<lbann_summary>&) {
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackSaveImages&>(proto_msg);
-  return make_unique<save_images>(
+  return std::make_unique<save_images>(
     parse_list<>(params.layers()),
     params.image_format(),
     params.image_prefix());
@@ -187,4 +187,5 @@ build_save_images_callback_from_pbuf(
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::save_images
+#define LBANN_CLASS_LIBNAME callback_save_images
 #include <lbann/macros/register_class_with_cereal.hpp>

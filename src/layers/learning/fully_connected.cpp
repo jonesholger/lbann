@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -110,30 +110,6 @@ fully_connected_layer<TensorDataType, T_layout, Dev>::get_description() const {
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void fully_connected_layer<TensorDataType, T_layout, Dev>
-::setup_matrices(const El::Grid& grid) {
-  data_type_layer<TensorDataType>::setup_matrices(grid);
-  deallocate_matrices();
-  if(Dev == El::Device::CPU) {
-    if(T_layout == data_layout::MODEL_PARALLEL) {
-      // Allocate a MCStarMat (RowSumMat)
-      this->m_bias_gradient =
-        new El::DistMatrix<TensorDataType,
-                           El::MC, El::STAR,
-                           El::ELEMENT,
-                           El::Device::CPU>(grid);
-    } else if(T_layout == data_layout::DATA_PARALLEL) {
-      // Allocate a StarMat
-      this->m_bias_gradient =
-        new El::DistMatrix<TensorDataType,
-                           El::STAR, El::STAR,
-                           El::ELEMENT,
-                           El::Device::CPU>(grid);
-    }
-  }
-}
-
-template <typename TensorDataType, data_layout T_layout, El::Device Dev>
-void fully_connected_layer<TensorDataType, T_layout, Dev>
 ::setup_data(size_t max_mini_batch_size) {
   data_type_layer<TensorDataType>::setup_data(max_mini_batch_size);
 
@@ -148,7 +124,7 @@ void fully_connected_layer<TensorDataType, T_layout, Dev>
   }
   if (!this->has_weights(0)) {
     auto w = std::make_shared<WeightsType>(*this->get_comm());
-    auto init = make_unique<he_initializer<TensorDataType>>(probability_distribution::gaussian);
+    auto init = std::make_unique<he_initializer<TensorDataType>>(probability_distribution::gaussian);
     auto opt = this->m_model->template create_optimizer<TensorDataType>();
     w->set_name(this->get_name() + "_linearity_weights");
     w->set_initializer(std::move(init));
@@ -200,6 +176,25 @@ void fully_connected_layer<TensorDataType, T_layout, Dev>
     bias_dist.rowDist = El::STAR;
     bias_weights.set_dims(output_dims);
     bias_weights.set_matrix_distribution(bias_dist);
+
+    // Setup bias gradient
+    if(Dev == El::Device::CPU) {
+      if(T_layout == data_layout::MODEL_PARALLEL) {
+        // Allocate a MCStarMat (RowSumMat)
+        this->m_bias_gradient =
+          new El::DistMatrix<TensorDataType,
+                             El::MC, El::STAR,
+                             El::ELEMENT,
+                             El::Device::CPU>(*bias_dist.grid);
+      } else if(T_layout == data_layout::DATA_PARALLEL) {
+        // Allocate a StarMat
+        this->m_bias_gradient =
+          new El::DistMatrix<TensorDataType,
+                             El::STAR, El::STAR,
+                             El::ELEMENT,
+                             El::Device::CPU>(*bias_dist.grid);
+      }
+    }
     if (this->m_bias_gradient != nullptr) {
       El::Zeros(*this->m_bias_gradient,
                 bias_weights.get_matrix_height(),
@@ -239,6 +234,9 @@ void fp_compute_impl(fully_connected_layer<TensorDataType, data_layout::MODEL_PA
   // Apply linearity
   // Note: Perform GEMMs independently if possible
   const auto& linearity = l.weights_values(0);
+  if (!linearity.Participating()) {
+    return;
+  }
   if (linearity.DistSize() == 1) {
     El::Gemm(l.m_transpose ? El::TRANSPOSE : El::NORMAL,
              El::NORMAL,
@@ -278,6 +276,9 @@ void bp_compute_impl(fully_connected_layer<TensorDataType, data_layout::MODEL_PA
   const auto& local_input = input.LockedMatrix();
   const auto& local_gradient_wrt_output = gradient_wrt_output.LockedMatrix();
   auto& local_gradient_wrt_input = gradient_wrt_input.Matrix();
+  if (!linearity.Participating()) {
+    return;
+  }
 
   // Compute gradient w.r.t. bias if needed
   if (l.m_bias_scaling_factor != El::TypeTraits<TensorDataType>::Zero()) {
@@ -518,6 +519,9 @@ void fp_compute_impl(fully_connected_layer<TensorDataType, data_layout::MODEL_PA
   // Apply linearity
   // Note: Perform GEMMs independently if possible
   const auto& linearity = l.weights_values(0);
+  if (!linearity.Participating()) {
+    return;
+  }
   if (linearity.DistSize() == 1) {
     El::Gemm(l.m_transpose ? El::TRANSPOSE : El::NORMAL,
              El::NORMAL,
@@ -559,6 +563,9 @@ void bp_compute_impl(fully_connected_layer<TensorDataType, data_layout::MODEL_PA
   const auto& local_input = input.LockedMatrix();
   const auto& local_gradient_wrt_output = gradient_wrt_output.LockedMatrix();
   auto& local_gradient_wrt_input = gradient_wrt_input.Matrix();
+  if (!linearity.Participating()) {
+    return;
+  }
 
   // Compute gradient w.r.t. bias if needed
   // Note: local GEMV is sufficient, no need for global row sum
@@ -651,7 +658,7 @@ std::unique_ptr<Layer> build_fully_connected_layer_from_pbuf(
 {
   using LayerType = fully_connected_layer<TensorDataType, layout, device>;
   const auto& params = layer_msg.fully_connected();
-  return lbann::make_unique<LayerType>(
+  return std::make_unique<LayerType>(
     params.num_neurons(),
     params.transpose(),
     nullptr,

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -35,7 +35,7 @@
 #include "lbann/utils/description.hpp"
 #include "lbann/utils/memory.hpp"
 #include "lbann/utils/summary.hpp"
-#include "lbann/execution_contexts/sgd_execution_context.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 
 #include <google/protobuf/message.h>
 
@@ -47,7 +47,7 @@
 #define LBANN_ADD_DEFAULT_CALLBACK_BUILDER(Class, FunctionName)  \
   inline std::unique_ptr<callback_base> FunctionName(           \
     const google::protobuf::Message&, std::shared_ptr<lbann_summary> const&) {          \
-    return lbann::make_unique<Class>();                          \
+    return std::make_unique<Class>();                          \
   }
 
 namespace cereal
@@ -217,7 +217,7 @@ public:
   inline std::string get_multi_trainer_ec_model_path(const model& m,
                                                      const std::string& root_dir) {
     std::string dir = get_multi_trainer_path(m, root_dir);
-    const auto& c = static_cast<const sgd_execution_context&>(m.get_execution_context());
+    const auto& c = static_cast<const SGDExecutionContext&>(m.get_execution_context());
     return build_string(dir,
                         c.get_state_string(), '/',
                         m.get_name(), '/');

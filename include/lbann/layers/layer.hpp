@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -66,7 +66,7 @@
     lbann_comm* comm, lbann_data::Layer const&)                         \
   {                                                                     \
     using LayerType = LAYER_NAME##_layer<TensorDataType, Layout, Device>; \
-    return make_unique<LayerType>(comm);                                \
+    return std::make_unique<LayerType>(comm);                                \
   }
 
 /** @brief A utility macro for easily adding ETI for layer builders
@@ -367,18 +367,12 @@ public:
     return TypeName<DataType>();
   };
 
-
-  void set_num_spliting_groups(int num_grps)
-  {
-    m_num_spliting_groups = num_grps;
-  }
   //enable subgraph parallelism for this layer
   //to set variable for ssplit layer
   void set_enable_subgraph_variable()
   {
     m_parallel_strategy.enable_subgraph=true;
   }
-
 
   /** @brief Human-readable description. */
 
@@ -415,14 +409,18 @@ public:
   virtual void summarize_stats(lbann_summary& summarizer, int step);
   virtual void summarize_matrices(lbann_summary& summarizer, int step) = 0;
 
-  /** @brief Setup layer members.
+  /** @brief Setup layer members
+   *
    *  This calls the 'setup_pointers', 'setup_dims', 'setup_matrices',
    *  'setup_data', and 'setup_gpu' (if needed) functions. It is
    *  assumed that pointers to parent/child layers have already been
    *  initialized.
    */
+  virtual void setup(
+    size_t max_mini_batch_size,
+    DataReaderMetaData& dr_metadata,
+    const std::vector<El::Grid*>& grids);
 
-  virtual void setup(size_t max_mini_batch_size, DataReaderMetaData& dr_metadata,const El::Grid& grid);
   /** @brief Check that the setup is reasonable. */
 
 
@@ -588,6 +586,11 @@ public:
   /** Get reference to LBANN communicator. */
   lbann_comm* get_comm() const;
 
+  /** @brief Identifying tag for process grid */
+  int get_grid_tag() const noexcept;
+  /** @brief Set process grid */
+  void set_grid_tag(int tag);
+
   /** @name Hint layer access functions */
   ///@{
 
@@ -696,6 +699,9 @@ protected:
   // Setup helper functions
   // ===========================================================
 
+  /** @brief Setup process grid
+   */
+  void setup_grid();
   /** @brief Setup layer pointers.
    *  Called by the 'setup' function. Pointers to parent/child layers
    *  are assumed to be already initialized.
@@ -707,14 +713,16 @@ protected:
    *  equal to the first input tensor dimensions.
    */
   virtual void setup_dims(DataReaderMetaData& dr_metadata);
-  /** @brief Setup distributed matrices.
+  /** @brief Setup buffers for layer inputs and outputs
+   *
    *  Called by the 'setup' function. Each column of these distributed
    *  matrices is interpreted as the flattened tensor for a mini-batch
    *  sample. The matrices themselves are constructed by calling the
    *  'construct_matrix' function. If any matrices have already been
    *  setup, they are destroyed and reinstantiated.
    */
-  virtual void setup_matrices(const El::Grid& grid) = 0;
+  virtual void setup_matrices(
+    const std::vector<El::Grid*>& grids) = 0;
   /** @brief Setup layer data.
    *  Called by the 'setup' function. Memory is allocated for
    *  distributed matrices.
@@ -808,6 +816,25 @@ protected:
    */
   std::string m_name;
 
+  // -------------------------------------------------------
+  // Objects for sub-grid parallelism
+  // -------------------------------------------------------
+  /// @todo tym: Clean up and document
+
+  /** @brief Identifying tag for process grid
+   *
+   *  If the tag is negative, the process grid is chosen based on
+   *  heuristics. In particular, the layer will attempt to use the
+   *  same grid as its parent layers, reverting to the trainer grid if
+   *  not possible.
+   */
+  int m_grid_tag = -1;
+
+  // -------------------------------------------------------
+  // Objects from old sub-grid parallelism implementation
+  // -------------------------------------------------------
+  /// @todo Remove
+
   SubGraphCommunication subgraph_communication_method = PT2PT;
 
   bool apply_subgraph_parallelism = false;
@@ -821,7 +848,6 @@ protected:
   El::Int m_num_spliting_groups=1;
   std::shared_ptr<El::Grid> m_mygrid;
   std::shared_ptr<El::mpi::Comm>  m_interSubGridVCComm;
-
 
 private:
 
@@ -842,7 +868,7 @@ private:
    */
   friend void attempt_move_error_signal(
     Layer& parent, Layer const& child,
-    std::unique_ptr<BaseDistMat> signals);
+    std::unique_ptr<BaseDistMat> signal);
   friend void attempt_view_error_signal(
     Layer& parent, Layer const& child,
     const BaseDistMat& signals);

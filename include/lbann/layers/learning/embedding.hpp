@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -68,8 +68,7 @@ public:
 
 public:
 
-  /**
-   *  @param comm           LBANN communicator.
+  /** @brief Constructor
    *  @param num_embeddings Size of dictionary of embeddings.
    *  @param embedding_dim  Size of embedding vectors.
    *  @param padding_idx    If set, then the corresponding embedding
@@ -105,7 +104,6 @@ protected:
   friend class cereal::access;
   embedding_layer();
 
-  void setup_matrices(const El::Grid& grid) override;
   void setup_dims(DataReaderMetaData& dr_metadata) override;
   void setup_data(size_t max_mini_batch_size) override;
 
@@ -218,7 +216,7 @@ void embedding_layer<TensorDataType,Layout,Device>::setup_data(size_t max_mini_b
   // standard deviation 1.
   if (!this->has_weights()) {
     auto w = std::make_shared<WeightsType>(*this->get_comm());
-    auto init = make_unique<normal_initializer<TensorDataType>>(El::TypeTraits<TensorDataType>::Zero(),
+    auto init = std::make_unique<normal_initializer<TensorDataType>>(El::TypeTraits<TensorDataType>::Zero(),
                                                                 El::TypeTraits<TensorDataType>::One());
     auto opt = this->m_model->template create_optimizer<TensorDataType>();
     w->set_name(this->get_name() + "_weights");
@@ -259,7 +257,15 @@ void embedding_layer<TensorDataType,Layout,Device>::setup_data(size_t max_mini_b
   }
 
   // Initialize gradient w.r.t. embeddings
-  m_embeddings_grad->Resize(m_embedding_dim, m_num_embeddings);
+  {
+    auto& embedding_values =
+      dynamic_cast<AbsDistMatrixType&>(embeddings.get_values());
+    this->m_embeddings_grad.reset(
+      embedding_values.Construct(
+        embedding_values.Grid(),
+        embedding_values.Root()));
+    m_embeddings_grad->Resize(m_embedding_dim, m_num_embeddings);
+  }
 
 }
 

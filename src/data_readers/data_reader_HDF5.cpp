@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -216,7 +216,7 @@ void hdf5_data_reader::load()
   double tm11 = tm1;
   auto& arg_parser = global_argument_parser();
 
-  if (arg_parser.get<bool>(KEEP_PACKED_FIELDS)) {
+  if (arg_parser.get<bool>(LBANN_OPTION_KEEP_PACKED_FIELDS)) {
     m_delete_packed_fields = false;
   }
 
@@ -224,7 +224,7 @@ void hdf5_data_reader::load()
   // with data store
   // TODO MRW
   // opts->set_option("preload_data_store", true);
-  if (!arg_parser.get<bool>(USE_DATA_STORE)) {
+  if (!arg_parser.get<bool>(LBANN_OPTION_USE_DATA_STORE)) {
     LBANN_ERROR("HDF5 data reader requires the data store.",
                 "Set command line arguments --use_data_store --preload_data_store");
   }
@@ -264,7 +264,7 @@ void hdf5_data_reader::load()
               << "; num samples: " << m_shuffled_indices.size() << std::endl;
   }
 
-  if (!arg_parser.get<bool>(QUIET) && get_comm()->am_world_master()) {
+  if (!arg_parser.get<bool>(LBANN_OPTION_QUIET) && get_comm()->am_world_master()) {
     print_metadata();
   }
 }

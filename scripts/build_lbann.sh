@@ -26,6 +26,7 @@ CLEAN_BUILD=
 DEV_BUILD_FLAGS=
 # Flag for passing subcommands to spack install
 INSTALL_BUILD_EXTRAS=
+BUILD_JOBS="-j $(($(nproc)+2))"
 
 LBANN_VARIANTS=
 CMD_LINE_VARIANTS=
@@ -55,18 +56,20 @@ Build LBANN: has preconfigured module lists for LLNL LC, OLCF, and NERSC systems
 Usage: ${SCRIPT} [options] -- [list of spack variants]
 Options:
   ${C}--help${N}                     Display this help message and exit.
+  ${C}--ci-pip${N}                   PIP install CI required Python packages
   ${C}--clean-build${N}              Delete the local link to the build directory
   ${C}--clean-deps${N}               Forcibly uninstall Hydrogen, Aluminum, and DiHydrogen dependencies
   ${C}--configure-only${N}           Stop after adding all packages to the environment
   ${C}-d | --define-env${N}          Define (create) a Spack environment, including the lbann dependencies, for building LBANN from local source
   ${C}--dry-run${N}                  Dry run the commands (no effect)
-  ${C}-e | --extras <PATH>${N}       Add other packages from file at PATH to the Spack environment in addition to LBANN
+  ${C}-e | --extras <PATH>${N}       Add other packages from file at PATH to the Spack environment in addition to LBANN (Flag can be repeated)
   ${C}-j | --build-jobs <N>${N}      Number of parallel processes to use for compiling, e.g. -j \$((\$(nproc)+2))
   ${C}-l | --label <LABEL>${N}       LBANN version label prefix: (default label is local-<SPACK_ARCH_TARGET>,
                              and is built and installed in the spack environment lbann-<label>-<SPACK_ARCH_TARGET>
   ${C}-m | --mirror <PATH>${N}       Specify a Spack mirror (and buildcache)
   ${C}--no-modules${N}               Don't try to load any modules (use the existing users environment)
   ${C}-p | --pkg <PACKAGE>${N}       Add package PACKAGE to the Spack environment in addition to LBANN (Flag can be repeated)
+  ${C}--pip <requirements.txt>${N}   PIP install Python packages in requirements.txt with the version of Python used by LBANN (Flag can be repeated)
   ${C}--tmp-build-dir${N}            Put the build directory in tmp space
   ${C}--spec-only${N}                Stop after a spack spec command
   ${C}-s | --stable${N}              Use the latest stable defaults not the head of Hydrogen, DiHydrogen and Aluminum repos
@@ -91,6 +94,9 @@ while :; do
             help_message
             exit 1
             ;;
+        --ci-pip)
+            PIP_EXTRAS="${PIP_EXTRAS} ${LBANN_HOME}/ci_test/requirements.txt"
+            ;;
         --clean-build)
             CLEAN_BUILD="TRUE"
             ;;
@@ -108,7 +114,7 @@ while :; do
             ;;
         -e|--extras)
             if [ -n "${2}" ]; then
-                EXTRAS=${2}
+                EXTRAS="${EXTRAS} ${2}"
                 shift
             else
                 echo "\"${1}\" option requires a non-empty option argument" >&2
@@ -149,6 +155,15 @@ while :; do
         -p|--pkg)
             if [ -n "${2}" ]; then
                 PKG_LIST="${PKG_LIST} ${2}"
+                shift
+            else
+                echo "\"${1}\" option requires a non-empty option argument" >&2
+                exit 1
+            fi
+            ;;
+        --pip)
+            if [ -n "${2}" ]; then
+                PIP_EXTRAS="${PIP_EXTRAS} ${2}"
                 shift
             else
                 echo "\"${1}\" option requires a non-empty option argument" >&2
@@ -269,7 +284,7 @@ else
 fi
 
 SPACK_VERSION=$(spack --version | sed 's/-.*//g')
-MIN_SPACK_VERSION=0.16.0
+MIN_SPACK_VERSION=0.17.1
 
 compare_versions ${SPACK_VERSION} ${MIN_SPACK_VERSION}
 VALID_SPACK=$?
@@ -430,9 +445,16 @@ function exit_with_instructions()
     exit 1
 }
 
+##########################################################################################
+# Figure out if there are default dependencies or flags (e.g.  MPI/BLAS library) for the center
+CENTER_DEPENDENCIES=
+CENTER_FLAGS=
+CENTER_BLAS_LIBRARY=
+set_center_specific_spack_dependencies ${CENTER} ${SPACK_ARCH_TARGET}
+
 if [[ ! "${LBANN_VARIANTS}" =~ .*"^hydrogen".* ]]; then
     # If the user didn't supply a specific version of Hydrogen on the command line add one
-    HYDROGEN="^hydrogen${HYDROGEN_VER}"
+    HYDROGEN="^hydrogen${HYDROGEN_VER} ${CENTER_BLAS_LIBRARY}"
 fi
 
 if [[ (! "${LBANN_VARIANTS}" =~ .*"^aluminum".*) && (! "${LBANN_VARIANTS}" =~ .*"~al".*) ]]; then
@@ -443,7 +465,7 @@ fi
 if [[ ! "${LBANN_VARIANTS}" =~ .*"^dihydrogen".* ]]; then
     # If the user didn't supply a specific version of DiHydrogen on the command line add one
     # Due to concretizer errors force the openmp variant for DiHydrogen
-    DIHYDROGEN="^dihydrogen${DIHYDROGEN_VER}"
+    DIHYDROGEN="^dihydrogen${DIHYDROGEN_VER} ${CENTER_BLAS_LIBRARY}"
 fi
 
 GPU_VARIANTS_ARRAY=('+cuda' '+rocm')
@@ -465,6 +487,16 @@ do
         fi
     fi
 done
+
+# Check if the user explicitly doesn't want Python support inside of LBANN
+if [[ ! "${LBANN_VARIANTS}" =~ .*"~python".* ]]; then
+    # If Python support is not disabled add NumPy as an external for sanity
+    # Specifically, for use within the data reader, NumPy has to have the same
+    # C++ std library
+    if [[ ! "${PKG_LIST}" =~ .*"py-numpy".* ]]; then
+        PKG_LIST="${PKG_LIST} py-numpy@1.16.0:"
+    fi
+fi
 
 # Record the original command in the log file
 echo "${ORIG_CMD}" | tee -a ${LOG}
@@ -537,11 +569,6 @@ if [[ -z "${DRY_RUN:-}" ]]; then
     ${CMD} || exit_on_failure "${CMD}"
 fi
 
-# Figure out if there is a default MPI library for the center
-CENTER_DEPENDENCIES=
-CENTER_FLAGS=
-set_center_specific_spack_dependencies ${CENTER} ${SPACK_ARCH_TARGET}
-
 ##########################################################################################
 # See if the is a local spack mirror or buildcache
 if [[ -n "${USER_MIRROR:-}" ]]; then
@@ -594,7 +621,8 @@ if [[ -n "${INSTALL_DEPS:-}" ]]; then
     echo ${CMD} | tee -a ${LOG}
     [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
 
-    CMD="spack external find --scope env:${LBANN_ENV}"
+    # Limit the scope of the external search to minimize overhead time
+    CMD="spack external find --scope env:${LBANN_ENV} bzip2 cmake cuda cudnn hipblas hwloc ninja libtool nccl ncurses openssl perl pkg-config python rccl rdma-core sqlite spectrum-mpi mvapich2 openmpi"
     echo ${CMD} | tee -a ${LOG}
     [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
 
@@ -630,7 +658,11 @@ if [[ -n "${INSTALL_DEPS:-}" ]]; then
 
     # Explicitly mark lbann for development
     if [[ -z "${USER_BUILD:-}" ]]; then
-        CMD="spack develop --no-clone -p ${LBANN_HOME} ${LBANN_SPEC}"
+        # Only "develop" the lbann package with the version number not the entire
+        # spec, because the spec is already handled with the add command.  Including the
+        # entire spec in the develop command triggers a bug in Spack v0.17.1 where the
+        # environment cannot be built twich with the --reuse flag
+        CMD="spack develop --no-clone -p ${LBANN_HOME} lbann${AT_LBANN_LABEL}"
         echo ${CMD} | tee -a ${LOG}
         [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
     fi
@@ -644,9 +676,12 @@ if [[ -n "${INSTALL_DEPS:-}" ]]; then
 
     # Add any extra packages in file EXTRAS that you want to build in conjuction with the LBANN package
     if [[ -n "${EXTRAS:-}" ]]; then
-        CMD="source ${EXTRAS}"
-        echo ${CMD} | tee -a ${LOG}
-        [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
+        for e in ${EXTRAS}
+        do
+            CMD="source ${e}"
+            echo ${CMD} | tee -a ${LOG}
+            [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
+        done
     fi
 
     # Add any extra packages specified on the command line that you want to build in conjuction with the LBANN package
@@ -668,10 +703,12 @@ if [[ "${SPEC_ONLY}" == "TRUE" ]]; then
    fi
 fi
 
-# Try to concretize the environment and catch the return code
-CMD="spack concretize ${INSTALL_BUILD_EXTRAS}"
-echo ${CMD} | tee -a ${LOG}
-[[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
+if [[ -n "${INSTALL_DEPS:-}" ]]; then
+  # Try to concretize the environment and catch the return code
+  CMD="spack concretize --reuse ${INSTALL_BUILD_EXTRAS}"
+  echo ${CMD} | tee -a ${LOG}
+  [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
+fi
 
 # Get the spack hash for LBANN (Ensure that the concretize command has been run so that any impact of external packages is factored in)
 LBANN_SPEC_HASH=$(spack find -cl | grep -v "\-\-\-\-\-\-" | grep lbann${AT_LBANN_LABEL} | awk '{print $1}')
@@ -721,7 +758,7 @@ fi
 
 ##########################################################################################
 # Actually install LBANN from local source
-CMD="spack install ${BUILD_JOBS} ${INSTALL_BUILD_EXTRAS}"
+CMD="spack install --reuse ${BUILD_JOBS} ${INSTALL_BUILD_EXTRAS}"
 echo ${CMD} | tee -a ${LOG}
 [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
 
@@ -770,6 +807,16 @@ if [[ -n "${UPDATE_BUILDCACHE:-}" && -r "${UPDATE_BUILDCACHE:-}" ]]; then
     [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
 fi
 
+# Install any extra Python packages via PIP if requested
+if [[ -n "${PIP_EXTRAS:-}" ]]; then
+    for p in ${PIP_EXTRAS}
+    do
+        CMD="python -m pip install -r ${p}"
+        echo ${CMD} | tee -a ${LOG}
+        [[ -z "${DRY_RUN:-}" ]] && { ${CMD} || exit_on_failure "${CMD}"; }
+    done
+fi
+
 # Don't use the output of this file since it will not exist if the compilation is not successful
 # LBANN_BUILD_DIR=$(grep "PROJECT_BINARY_DIR:" ${LBANN_HOME}/spack-build-out.txt | awk '{print $2}')
 
@@ -814,10 +861,10 @@ if [[ -z "${USER_BUILD:-}" ]]; then
     echo "  cd spack-build-${LBANN_SPEC_HASH}" | tee -a ${LOG}
     echo "  ninja install" | tee -a ${LOG}
 fi
-echo "To use this version of LBANN use the module system without the need for activating the environment (does not require being in an environment)" | tee -a ${LOG}
-echo "  module load lbann/${LBANN_LABEL}-${LBANN_SPEC_HASH}" | tee -a ${LOG}
-echo "or have spack load the module auto-magically. It is installed in a spack environment named ${LBANN_ENV}, access it via: (has to be executed from the environment)"  | tee -a ${LOG}
-echo "  spack load lbann${AT_LBANN_LABEL} arch=${SPACK_ARCH}" | tee -a ${LOG}
+echo "Additional Python packages for working with LBANN can be added either via PIP or by concretizing them together in spack., activate the spack environment then" | tee -a ${LOG}
+echo "To install them via PIP: 1) the spack environment (see above) and 2) issue the following command" | tee -a ${LOG}
+echo "  python3 -m pip install -r <requirements file>" | tee -a ${LOG}
+echo "To install them via Spack: include them on the build_lbann.sh script command line argument via -e <path to text file of packages> or -p <spack package name>" | tee -a ${LOG}
 echo "##########################################################################################" | tee -a ${LOG}
 echo "All details of the run are logged to ${LOG}"
 echo "##########################################################################################"

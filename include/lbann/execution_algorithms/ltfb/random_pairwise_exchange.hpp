@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -89,8 +89,8 @@ public:
      *  @param[in] partner_trainer The ID of the partner trainer.
      *  @param[in] step The LTFB step ID.
      *
-     *  @fixme The step parameter is only used by CheckpointFile; we
-     *  should consider alternatives that don't clutter the API.
+     *  @todo The step parameter is only used by CheckpointFile; we
+     *        should consider alternatives that don't clutter the API.
      */
     virtual std::unique_ptr<model>
     get_partner_model(model const& m, El::Int partner_trainer, size_t step) = 0;
@@ -159,13 +159,13 @@ public:
    *  @param[in,out] dc The data source for the tournament.
    */
   void select_next(model& m,
-                   ltfb::ExecutionContext& ctxt,
+                   ltfb::LTFBExecutionContext& ctxt,
                    data_coordinator& dc) const final;
 
 private:
   /** @brief Get the value of the given metric from the model. */
   std::unordered_map<std::string, EvalType>
-  evaluate_model(model& m, ExecutionContext& ctxt, data_coordinator& dc) const;
+  evaluate_model(model& m, LTFBExecutionContext& ctxt, data_coordinator& dc) const;
   /** @brief Generate a new trainer partner from the comm. */
   El::Int get_partner_trainer(lbann_comm const& c) const noexcept;
   /** @brief Evaluate the output of two models according to the input
@@ -202,12 +202,12 @@ private:
 
   /** @brief The strategy for mutation of a model
    *
-   *  When a trainer loses in a LTFB tournament, the winning model is 
+   *  When a trainer loses in a LTFB tournament, the winning model is
    *  copied over to it and this mutation strategy is applied to the
    *  copied model to explore a new model. This is relevant to neural
-   *  architecture search (NAS). 
+   *  architecture search (NAS).
    */
-  std::unique_ptr<MutationStrategy> m_mutate_algo;  
+  std::unique_ptr<MutationStrategy> m_mutate_algo;
 
 }; // class RandomPairwiseExchange
 
@@ -290,7 +290,7 @@ public:
 /** @name Builder functions */
 ///@{
 
-/** @brief Concrete product builder for RandomPairwiseExchange. */
+/** @brief Concrete builder for RandomPairwiseExchange. */
 template <>
 std::unique_ptr<ltfb::RandomPairwiseExchange>
 make(google::protobuf::Message const&);

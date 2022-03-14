@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -68,7 +68,7 @@ void profiler::serialize(Archive & ar) {
 }
 
 void profiler::on_epoch_begin(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   // Skip the first epoch
   if (m_skip_init && c.get_epoch() == 1) {
     prof_start();
@@ -78,31 +78,31 @@ void profiler::on_epoch_begin(model *m) {
 }
 
 void profiler::on_epoch_end(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   prof_region_end(("epoch " + std::to_string(c.get_epoch())).c_str(),
                   m_sync);
 }
 
 void profiler::on_validation_begin(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   prof_region_begin(("val " + std::to_string(c.get_epoch())).c_str(),
                     prof_colors[0], m_sync);
 }
 
 void profiler::on_validation_end(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   prof_region_end(("val " + std::to_string(c.get_epoch())).c_str(),
                   m_sync);
 }
 
 void profiler::on_test_begin(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   prof_region_begin(("test " + std::to_string(c.get_epoch())).c_str(),
                     prof_colors[0], m_sync);
 }
 
 void profiler::on_test_end(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   prof_region_end(("test " + std::to_string(c.get_epoch())).c_str(),
                   m_sync);
 }
@@ -227,7 +227,7 @@ build_profiler_callback_from_pbuf(
   const google::protobuf::Message& proto_msg, const std::shared_ptr<lbann_summary>&) {
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackProfiler&>(proto_msg);
-  return make_unique<profiler>(params.sync(),
+  return std::make_unique<profiler>(params.sync(),
                                               params.skip_init());
 }
 
@@ -235,4 +235,5 @@ build_profiler_callback_from_pbuf(
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::profiler
+#define LBANN_CLASS_LIBNAME callback_profiler
 #include <lbann/macros/register_class_with_cereal.hpp>

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -31,7 +31,7 @@
 
 namespace lbann {
 
-/** @brief Sort tensor entries. */
+/** @brief Sort tensor entries */
 template <typename TensorDataType,
           data_layout T_layout = data_layout::DATA_PARALLEL,
           El::Device Dev = El::Device::CPU>
@@ -115,8 +115,8 @@ class sort_layer : public data_type_layer<TensorDataType> {
     this->set_output_dims(this->get_input_dims());
   }
 
-  void setup_matrices(const El::Grid& grid) override {
-    data_type_layer<TensorDataType>::setup_matrices(grid);
+  void setup_data(size_t max_mini_batch_size) override {
+    data_type_layer<TensorDataType>::setup_data(max_mini_batch_size);
     const auto& dist = this->get_activations().DistData();
     switch (dist.device) {
     case El::Device::CPU:

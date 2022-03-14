@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -94,7 +94,7 @@ TruncationSelectionExchange::TruncationSelectionExchange(
 {}
 
 EvalType TruncationSelectionExchange::evaluate_model(model& m,
-                                                     ExecutionContext& ctxt,
+                                                     LTFBExecutionContext& ctxt,
                                                      data_coordinator& dc) const
 {
   // Make sure data readers finish asynchronous work
@@ -102,18 +102,18 @@ EvalType TruncationSelectionExchange::evaluate_model(model& m,
   dc.collect_background_data_fetch(original_mode);
 
   // Can use validation if it is global
-  if (!dc.is_execution_mode_valid(execution_mode::testing)) {
+  if (!dc.is_execution_mode_valid(execution_mode::tournament)) {
     LBANN_ERROR("LTFB truncation selection requires ",
-                to_string(execution_mode::testing),
+                to_string(execution_mode::tournament),
                 " execution mode");
   }
 
   // Mark the data store as loading - Note that this is a temporary fix
   // for the current use of the tournament
-  m.mark_data_store_explicitly_loading(execution_mode::testing);
+  m.mark_data_store_explicitly_loading(execution_mode::tournament);
 
-  // Evaluate model on test (or validation?) set
-  get_trainer().evaluate(&m, execution_mode::testing);
+  // Evaluate model on validation set
+  get_trainer().evaluate(&m, execution_mode::tournament);
 
   // Get metric values
   bool found_metric = false;
@@ -123,7 +123,7 @@ EvalType TruncationSelectionExchange::evaluate_model(model& m,
     metric_name = met->name();
     if (m_metrics.count(metric_name)) {
       found_metric = true;
-      score += met->get_mean_value(execution_mode::testing);
+      score += met->get_mean_value(execution_mode::tournament);
       break;
     }
   }
@@ -138,7 +138,7 @@ EvalType TruncationSelectionExchange::evaluate_model(model& m,
                 "\"");
   }
 
-  m.make_data_store_preloaded(execution_mode::testing);
+  m.make_data_store_preloaded(execution_mode::tournament);
 
   // Clean up and return metric score
   m.reset_mode(ctxt, original_mode);
@@ -147,7 +147,7 @@ EvalType TruncationSelectionExchange::evaluate_model(model& m,
 }
 
 void TruncationSelectionExchange::select_next(model& m,
-                                              ltfb::ExecutionContext& ctxt,
+                                              ltfb::LTFBExecutionContext& ctxt,
                                               data_coordinator& dc) const
 {
   auto const& comm = *(m.get_comm());
@@ -232,6 +232,7 @@ void TruncationSelectionExchange::select_next(model& m,
     auto&& metadata = dc.get_dr_metadata();
     m.setup(trainer.get_max_mini_batch_size(),
             metadata,
+            trainer.get_grids(),
             /*force*/ true);
   }
 }
@@ -261,6 +262,7 @@ to_lbann(lbann_data::TruncationSelectionExchange::MetricStrategy strategy)
 
 } // namespace
 
+/** @brief Builder function for TruncationSelectionExchange. */
 template <>
 std::unique_ptr<lbann::ltfb::TruncationSelectionExchange>
 lbann::make<lbann::ltfb::TruncationSelectionExchange>(
@@ -283,7 +285,7 @@ lbann::make<lbann::ltfb::TruncationSelectionExchange>(
                    return ValueType{kvp.first, to_lbann(kvp.second)};
                  });
 
-  return make_unique<lbann::ltfb::TruncationSelectionExchange>(
+  return std::make_unique<lbann::ltfb::TruncationSelectionExchange>(
     std::move(metric_map),
     msg.truncation_k());
 }

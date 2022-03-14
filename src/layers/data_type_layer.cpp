@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -29,7 +29,7 @@
 
 #include "matrix_builder.hpp"
 
-#include "lbann/execution_contexts/sgd_execution_context.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 #include "lbann/layers/data_type_layer.hpp"
 #include "lbann/models/model.hpp"
 #include "lbann/trainers/trainer.hpp"
@@ -37,6 +37,7 @@
 #include "lbann/utils/options.hpp"
 #include "lbann/utils/summary_impl.hpp"
 #include "lbann/utils/tensor_impl.hpp"
+#include "lbann/utils/timer.hpp"
 
 namespace {
 template <typename MatrixPtrT>
@@ -103,7 +104,7 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::forward_prop() 
   }
 
   // Setup tensors
-  const auto& c = static_cast<sgd_execution_context&>(m_model->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m_model->get_execution_context());
   const auto& mini_batch_size = c.get_current_mini_batch_size();
   fp_setup_inputs(mini_batch_size);
   fp_setup_outputs(mini_batch_size);
@@ -146,7 +147,7 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::back_prop_impl_
   const auto bp_start = get_time();
 
   // Setup tensors
-  const auto& c = static_cast<sgd_execution_context&>(
+  const auto& c = static_cast<SGDExecutionContext&>(
     m_model->get_execution_context());
   const auto& mini_batch_size = c.get_current_mini_batch_size();
   bp_setup_gradient_wrt_inputs(mini_batch_size);
@@ -433,7 +434,7 @@ template <typename T, data_layout Layout,
 auto MakeMatBuilderGPU()
   -> std::unique_ptr<details::MatrixBuilder<T>>
 {
-  return make_unique<
+  return std::make_unique<
       details::DefaultMemoryMatrixBuilder<T,Layout,El::Device::GPU>>();
 }
 
@@ -454,7 +455,7 @@ auto MakeMatBuilderDev(El::Device const device)
 {
   switch (device) {
   case El::Device::CPU:
-    return make_unique<
+    return std::make_unique<
       details::DefaultMemoryMatrixBuilder<T,Layout,El::Device::CPU>>();
 #ifdef LBANN_HAS_GPU
   case El::Device::GPU:
@@ -483,7 +484,8 @@ auto MakeMatBuilder(data_layout const layout, El::Device const device)
 
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::
-setup_matrices(const El::Grid& grid) {
+setup_matrices(
+  const std::vector<El::Grid*>& grids) {
 
   using InputMatrixBuilderType = details::MatrixBuilder<InputTensorDataType>;
   using OutputMatrixBuilderType = details::MatrixBuilder<OutputTensorDataType>;
@@ -526,6 +528,36 @@ setup_matrices(const El::Grid& grid) {
   m_gradient_wrt_inputs.resize(get_num_parents());
   m_temp_grad.resize(1);
   m_subgrid_tensors_split.resize(1);
+
+  // Choose process grid to distribute matrices over
+  int tag = this->get_grid_tag();
+  if (tag < 0) {
+    // Use tag from parent layers if they are all the same. Otherwise
+    // use tag 0.
+    for (int i=0; i<this->get_num_parents(); ++i) {
+      auto parent_tag = this->get_parent_layer(i).get_grid_tag();
+      if (i == 0) {
+        tag = parent_tag;
+      }
+      if (tag != parent_tag) {
+        tag = -1;
+        break;
+      }
+    }
+    if (tag < 0) {
+      tag = 0;
+    }
+  }
+  if (tag < 0 || tag >= static_cast<int>(grids.size())) {
+    LBANN_ERROR(
+      "attempted to initialize ",
+      this->get_type()," layer \"",this->get_name(),"\" ",
+      "on invalid grid ",
+      "(grid tag ",tag,", ",
+      grids.size()," grids available)");
+  }
+  this->set_grid_tag(tag);
+  const El::Grid& grid = *grids[tag];
 
   auto childs = get_child_layers();
   auto parents = get_parent_layers();
@@ -697,7 +729,7 @@ setup_matrices(const El::Grid& grid) {
   /// training with persistent error signals
   if (this->get_device_allocation() == El::Device::GPU) {
     const auto& arg_parser = global_argument_parser();
-    if (!arg_parser.get<bool>(USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
+    if (!arg_parser.get<bool>(LBANN_OPTION_USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
       for (auto& input : m_inputs) {
         input->Matrix().SetMemoryMode(0); // Directly-allocated memory
       }
@@ -788,28 +820,24 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::
 fp_setup_inputs(El::Int mini_batch_size) {
   if (get_num_parents() < 1) { return; }
 
-  // Determine distributed matrix alignment
-  const auto& alignment_dist = get_parent_layer().get_activations(*this).DistData();
-
   // Iterate through input tensors
   for (int i = 0; i < get_num_parents(); ++i) {
+
 #ifdef LBANN_HAS_DISTCONV
+    // Skip if tensors are managed by Distconv
     if (!keep_original_inputs(i)) continue;
 #endif // LBANN_HAS_DISTCONV
+
     // Initialize input tensor
     const auto& parent = get_parent_layer(i);
     const auto& parent_output = parent.get_activations(*this);
     auto& input = *m_inputs[i];
     input.Empty(false);
-    if(!this->is_subgraph_parallelism_enabled()){
-      input.AlignWith(alignment_dist);
-    }
     view_or_copy_tensor(parent_output, input);
 
     // Check input matrix dimensions
     const auto& height = get_input_size(i);
     const auto& width = mini_batch_size;
-
     if ((input.Height() != height || input.Width() != width) ) {
       std::stringstream err;
       err << "layer \"" << get_name() << "\" "
@@ -903,12 +931,9 @@ move_or_copy_prev_error_signal_(
 
   // Check the signal size
   auto& signal = *signal_in;
-  if(m_outputs[layer_idx]->Participating()==true)
-  {
-    assert_tensor_size(
-      signal, get_output_size(layer_idx), m_outputs[layer_idx]->Width(),
-      m_name, child.get_name());
-  }
+  assert_tensor_size(
+    signal, get_output_size(layer_idx), m_outputs[layer_idx]->Width(),
+    m_name, child.get_name());
 
   // If the distribution is OK, then we can just swap data
   // around. Otherwise, deep copy into correct distribution.
@@ -1119,7 +1144,7 @@ setup_inter_subgrid_comm_based_on_parents(const El::Grid& grid) {
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::
 setup_distconv_adapter(const DataReaderMetaData& dr_metadata) {
-  this->get_distconv_adapter_ptr() = make_unique<data_type_distconv_adapter
+  this->get_distconv_adapter_ptr() = std::make_unique<data_type_distconv_adapter
                                                  <InputTensorDataType,OutputTensorDataType>>(*this);
 }
 

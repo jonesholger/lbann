@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -69,7 +69,7 @@ std::string weights_string(const data_type_weights<TensorDataType>& w) {
 /** Get human-readable string describing current batch step. */
 std::string batch_step_string(const model& m) {
   const auto& c =
-    dynamic_cast<const sgd_execution_context&>(m.get_execution_context());
+    dynamic_cast<const SGDExecutionContext&>(m.get_execution_context());
   std::stringstream msg;
   const auto& mode = c.get_execution_mode();
   msg << to_string(mode) << " batch " << c.get_step();
@@ -186,11 +186,12 @@ build_debug_callback_from_pbuf(const google::protobuf::Message& proto_msg,
     dynamic_cast<const lbann_data::Callback::CallbackDebug&>(proto_msg);
   const auto& modes =
     parse_set<execution_mode>(params.phase());
-  return make_unique<debug>(modes);
+  return std::make_unique<debug>(modes);
 }
 
 } // namespace callback
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::debug
+#define LBANN_CLASS_LIBNAME callback_debug
 #include <lbann/macros/register_class_with_cereal.hpp>

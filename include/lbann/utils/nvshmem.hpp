@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -32,6 +32,7 @@
 #include "lbann/utils/gpu/helpers.hpp"
 #include "lbann/utils/exception.hpp"
 #include <mpi.h>
+#define NVSHMEM_USE_NCCL
 #include <nvshmem.h>
 #include <nvshmemx.h>
 

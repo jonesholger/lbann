@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -67,13 +67,13 @@ public:
   RegularizedEvolution(RegularizedEvolution const& other);
 
   void select_next(model& m,
-                   ltfb::ExecutionContext& ctxt,
+                   ltfb::LTFBExecutionContext& ctxt,
                    data_coordinator& dc) const final;
 
 private:
   /** @brief Get the value of the given metric from the model. */
   EvalType
-  evaluate_model(model& m, ExecutionContext& ctxt, data_coordinator& dc) const;
+  evaluate_model(model& m, LTFBExecutionContext& ctxt, data_coordinator& dc) const;
 
 private:
   /** @brief The strategy for mutation of a model
@@ -105,7 +105,7 @@ private:
 /** @name Builder functions */
 ///@{
 
-/** @brief Concrete product builder for RegularizedEvolution. */
+/** @brief Concrete builder for RegularizedEvolution. */
 template <>
 std::unique_ptr<ltfb::RegularizedEvolution>
 make(google::protobuf::Message const&);

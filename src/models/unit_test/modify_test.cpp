@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -70,7 +70,7 @@ auto make_model(lbann::lbann_comm& comm)
                                                 my_proto.optimizer(),
                                                 my_proto.trainer(),
                                                 my_proto.model());
-  my_model->setup(1UL, metadata);
+  my_model->setup(1UL, metadata, {&comm.get_trainer_grid()});
   return my_model;
 }
 
@@ -130,7 +130,7 @@ TEST_CASE("Layer Insertion", "[mpi][model][dag]")
   SECTION("Inserting a valid layer")
   {
     REQUIRE_NOTHROW(m->insert_layer(make_new_relu_layer(comm), "layer5"));
-    REQUIRE_NOTHROW(m->setup(1UL, metadata));
+    REQUIRE_NOTHROW(m->setup(1UL, metadata, {&comm.get_trainer_grid()}));
 
     // Verify the new layer is there
     CHECK(has_layer(*m, "new_relu"));
@@ -157,7 +157,7 @@ TEST_CASE("Layer Removal", "[mpi][model][dag]")
   SECTION("Removing a valid layer")
   {
     REQUIRE_NOTHROW(m->remove_layer("layer5"));
-    REQUIRE_NOTHROW(m->setup(1UL, metadata));
+    REQUIRE_NOTHROW(m->setup(1UL, metadata, {&comm.get_trainer_grid()}));
 
     // Verify the layer is removed
     CHECK_FALSE(has_layer(*m, "layer5"));
@@ -182,7 +182,7 @@ TEST_CASE("Layer Replacement", "[mpi][model][dag]")
   SECTION("Replacing a valid layer")
   {
     REQUIRE_NOTHROW(m->replace_layer(make_new_relu_layer(comm), "layer5"));
-    REQUIRE_NOTHROW(m->setup(1UL, metadata));
+    REQUIRE_NOTHROW(m->setup(1UL, metadata, {&comm.get_trainer_grid()}));
 
     // Verify the new layer is there
     CHECK(has_layer(*m, "new_relu"));

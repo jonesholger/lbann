@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -75,7 +75,7 @@ void debug_io::on_forward_prop_begin(model *m, Layer *l) {
 }
 
 void debug_io::print_fp_start(model *m, input_layer<DataType> *input) {
-  const auto& c = static_cast<const sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<const SGDExecutionContext&>(m->get_execution_context());
   const data_coordinator& dc = get_const_trainer().get_data_coordinator();
   const auto& step = c.get_step();
   const auto mode = c.get_execution_mode();
@@ -182,9 +182,9 @@ build_debug_io_callback_from_pbuf(
   case execution_mode::training:
   case execution_mode::validation:
   case execution_mode::testing:
-    return make_unique<debug_io>(phase, lvl);
+    return std::make_unique<debug_io>(phase, lvl);
   default:
-    return make_unique<debug_io>();
+    return std::make_unique<debug_io>();
   }
 }
 
@@ -192,4 +192,5 @@ build_debug_io_callback_from_pbuf(
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::debug_io
+#define LBANN_CLASS_LIBNAME callback_debug_io
 #include <lbann/macros/register_class_with_cereal.hpp>

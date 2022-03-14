@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -75,7 +75,7 @@ class kfac_block_fc_conv: public kfac_block<Device> {
   /** Constructor.
    */
   kfac_block_fc_conv(Layer* layer,
-                     kfac::ExecutionContext* context,
+                     kfac::KFACExecutionContext* context,
                      const size_t layer_id,
                      const size_t inverse_proc_rank,
                      const bool is_conv)
@@ -156,7 +156,7 @@ class kfac_block_fc_conv: public kfac_block<Device> {
       lbann_comm* comm,
       int num_local_activations,
       int num_local_errors,
-      int num_weights) override;  
+      int num_weights) override;
 
   const std::vector<El::AbstractMatrix<DataType>*>
   get_preconditioned_grad_buffers() override;

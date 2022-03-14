@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -33,7 +33,7 @@
 
 namespace lbann {
 
-/** @brief Apply scale and bias to tensor channels.
+/** @brief Apply per-channel scale and bias
  *
  *  The input tensor is sliced along the first tensor dimension (the
  *  "channel" dimension, assuming image data in CHW format) and scale
@@ -88,7 +88,6 @@ public:
   data_layout get_data_layout() const override { return Layout; }
   El::Device get_device_allocation() const override { return Device; }
 
-  void setup_matrices(const El::Grid& grid) override;
   void setup_data(size_t max_mini_batch_size) override;
 
   /** @name Serialization */
@@ -140,13 +139,6 @@ auto channelwise_scale_bias_layer<TensorDataType, Layout, Dev>
 
 template <typename TensorDataType, data_layout Layout, El::Device Dev>
 void channelwise_scale_bias_layer<TensorDataType, Layout, Dev>
-::setup_matrices(const El::Grid& grid) {
-  data_type_layer<TensorDataType>::setup_matrices(grid);
-  m_weights_gradient.reset(new StarMatDT<TensorDataType, Dev>(grid));
-}
-
-template <typename TensorDataType, data_layout Layout, El::Device Dev>
-void channelwise_scale_bias_layer<TensorDataType, Layout, Dev>
 ::setup_data(size_t max_mini_batch_size) {
   data_type_layer<TensorDataType>::setup_data(max_mini_batch_size);
   const El::Int num_channels = this->get_output_dims()[0];
@@ -159,7 +151,7 @@ void channelwise_scale_bias_layer<TensorDataType, Layout, Dev>
                                      El::TypeTraits<TensorDataType>::Zero());
     std::fill(vals.begin(), vals.begin()+num_channels,
               El::TypeTraits<TensorDataType>::One());
-    auto init = make_unique<value_initializer<TensorDataType>>(vals);
+    auto init = std::make_unique<value_initializer<TensorDataType>>(vals);
     auto opt = this->m_model->template create_optimizer<TensorDataType>();
     w->set_name(this->get_name() + "_weights");
     w->set_initializer(std::move(init));
@@ -182,8 +174,10 @@ void channelwise_scale_bias_layer<TensorDataType, Layout, Dev>
   this->get_weights(0).set_matrix_distribution(dist);
 
   // Setup gradient w.r.t. weights
+  m_weights_gradient.reset(AbsDistMatrixType::Instantiate(dist));
   m_weights_gradient->AlignWith(dist);
   m_weights_gradient->Resize(num_channels, 2);
+
 }
 
 LBANN_DEFINE_LAYER_BUILDER(channelwise_scale_bias);

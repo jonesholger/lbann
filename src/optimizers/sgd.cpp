@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -87,7 +87,7 @@ void sgd<TensorDataType>::setup(WeightsType* w) {
 #ifdef LBANN_HAS_GPU
   if (m_velocity->GetLocalDevice() == El::Device::GPU) {
     const auto& arg_parser = global_argument_parser();
-    if (!arg_parser.get<bool>(USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
+    if (!arg_parser.get<bool>(LBANN_OPTION_USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
       m_velocity->Matrix().SetMemoryMode(0); // Directly-allocated memory
     }
   }
@@ -183,7 +183,7 @@ std::unique_ptr<optimizer>
 build_sgd_optimizer_from_pbuf(
   google::protobuf::Message const& msg) {
   const auto& params = dynamic_cast<lbann_data::Optimizer::SGD const&>(msg);
-  return make_unique<sgd<TensorDataType>>(TensorDataType(params.learn_rate()),
+  return std::make_unique<sgd<TensorDataType>>(TensorDataType(params.learn_rate()),
                                           TensorDataType(params.momentum()),
                                           params.nesterov());
 }

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -56,7 +56,7 @@ void early_stopping::serialize(Archive & ar) {
 /// Monitor the objective function to see if the validation score
 /// continues to improve
 void early_stopping::on_validation_end(model *m) {
-  auto& c = dynamic_cast<sgd_execution_context&>(m->get_execution_context());
+  auto& c = dynamic_cast<SGDExecutionContext&>(m->get_execution_context());
   execution_mode mode = c.get_execution_mode();
   EvalType score = m->get_objective_function()->get_mean_value(mode);
   if (score < m_last_score) {
@@ -86,11 +86,12 @@ build_early_stopping_callback_from_pbuf(
   const google::protobuf::Message& proto_msg, const std::shared_ptr<lbann_summary>&) {
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackEarlyStopping&>(proto_msg);
-  return make_unique<early_stopping>(params.patience());
+  return std::make_unique<early_stopping>(params.patience());
 }
 
 } // namespace callback
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::early_stopping
+#define LBANN_CLASS_LIBNAME callback_early_stopping
 #include <lbann/macros/register_class_with_cereal.hpp>

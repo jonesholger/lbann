@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -259,6 +259,11 @@ void fp_impl(lbann_comm& comm,
              El::AbstractDistMatrix<TensorDataType>& running_mean,
              El::AbstractDistMatrix<TensorDataType>& running_var) {
 
+  // Make sure workspace is aligned with input tensor
+  batch_statistics.Empty(false);
+  batch_statistics.AlignWith(input);
+  batch_statistics.Resize(input.Height(), 2);
+
   // Local matrices
   const auto& local_input = dynamic_cast<const El::Matrix<TensorDataType, El::Device::GPU>&>(input.LockedMatrix());
   auto& local_output = dynamic_cast<El::Matrix<TensorDataType, El::Device::GPU>&>(output.Matrix());
@@ -400,6 +405,11 @@ void bp_training_impl(lbann_comm& comm,
                       El::AbstractDistMatrix<TensorDataType>& gradient_wrt_input,
                       const El::AbstractDistMatrix<TensorDataType>& statistics,
                       El::AbstractDistMatrix<TensorDataType>& gradient_wrt_statistics) {
+
+  // Make sure workspace is aligned with input tensor
+  gradient_wrt_statistics.Empty(false);
+  gradient_wrt_statistics.AlignWith(input);
+  gradient_wrt_statistics.Resize(input.Height(), 2);
 
   // Local matrices
   const auto& local_input = dynamic_cast<const El::Matrix<TensorDataType, El::Device::GPU>&>(input.LockedMatrix());

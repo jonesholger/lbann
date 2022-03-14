@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -83,7 +83,7 @@ public:
     do_dump_outputs(*m, *l);
   }
   void on_evaluate_forward_prop_end(model* m, Layer* l) override {
-    const auto& c = static_cast<const sgd_execution_context&>(m->get_execution_context());
+    const auto& c = static_cast<const SGDExecutionContext&>(m->get_execution_context());
     if(c.get_step() % m_batch_interval == 0) {
       do_dump_outputs(*m, *l);
     }

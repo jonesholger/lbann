@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -113,7 +113,7 @@ void adam<TensorDataType>::setup(WeightsType* w) {
   if (m_moment1->GetLocalDevice() == El::Device::GPU
       && m_moment2->GetLocalDevice() == El::Device::GPU) {
     const auto& arg_parser = global_argument_parser();
-    if (!arg_parser.get<bool>(USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
+    if (!arg_parser.get<bool>(LBANN_OPTION_USE_GPU_DEFAULT_MEMORY_IN_FORWARD_PROP)) {
       m_moment1->Matrix().SetMemoryMode(0); // Directly-allocated memory
       m_moment2->Matrix().SetMemoryMode(0); // Directly-allocated memory
     }
@@ -217,7 +217,7 @@ build_adam_optimizer_from_pbuf(
   google::protobuf::Message const& msg) {
   const auto& params =
     dynamic_cast<lbann_data::Optimizer::Adam const&>(msg);
-  return make_unique<adam<TensorDataType>>(TensorDataType(params.learn_rate()),
+  return std::make_unique<adam<TensorDataType>>(TensorDataType(params.learn_rate()),
                                            TensorDataType(params.beta1()),
                                            TensorDataType(params.beta2()),
                                            TensorDataType(params.eps()));

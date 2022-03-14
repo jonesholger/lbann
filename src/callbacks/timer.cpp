@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -72,7 +72,7 @@ void timer::timing_begin(const model& m) {
 }
 
 void timer::timing_end(model& m) {
-  const auto& c = static_cast<sgd_execution_context&>(m.get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m.get_execution_context());
   constexpr EvalType zero = 0;
 
   // Get run time
@@ -144,7 +144,7 @@ void timer::timing_end(model& m) {
 
     auto& arg_parser = global_argument_parser();
     bool allow_global_statistics =
-      arg_parser.get<bool>(LTFB_ALLOW_GLOBAL_STATISTICS);
+      arg_parser.get<bool>(LBANN_OPTION_LTFB_ALLOW_GLOBAL_STATISTICS);
     std::stringstream report;
 
     if(allow_global_statistics) {
@@ -249,11 +249,12 @@ void timer::timing_end(model& m) {
 std::unique_ptr<callback_base>
 build_timer_callback_from_pbuf(
   const google::protobuf::Message&, std::shared_ptr<lbann_summary> const& summarizer) {
-  return make_unique<timer>(summarizer);
+  return std::make_unique<timer>(summarizer);
 }
 
 } // namespace callback
 } // namespace lbann
 
 #define LBANN_CLASS_NAME callback::timer
+#define LBANN_CLASS_LIBNAME callback_timer
 #include <lbann/macros/register_class_with_cereal.hpp>

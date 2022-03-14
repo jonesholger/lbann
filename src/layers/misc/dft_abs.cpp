@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -292,30 +292,15 @@ void dft_abs_layer<T,D>::setup_dims(DataReaderMetaData& dr_metadata)
 {
   data_type_layer<T>::setup_dims(dr_metadata);
   this->set_output_dims(this->get_input_dims());
-  pimpl_ = make_unique<dft_abs_impl<T, D>>(this->get_input_dims());
-}
-
-template <typename T, El::Device D>
-void dft_abs_layer<T,D>::fp_setup_inputs(El::Int minibatch_size)
-{
-  using DevMatT = El::Matrix<T, D>;
-  data_type_layer<T>::fp_setup_inputs(minibatch_size);
-  pimpl_->setup_fp(
-    static_cast<DevMatT const&>(this->get_local_prev_activations()));
-}
-template <typename T, El::Device D>
-void dft_abs_layer<T,D>::bp_setup_gradient_wrt_inputs(El::Int minibatch_size)
-{
-  using DevMatT = El::Matrix<T, D>;
-  data_type_layer<T>::bp_setup_gradient_wrt_inputs(minibatch_size);
-  pimpl_->setup_fp(
-    static_cast<DevMatT const&>(this->get_local_prev_error_signals()));
+  pimpl_ = std::make_unique<dft_abs_impl<T, D>>(this->get_input_dims());
 }
 
 template <typename T, El::Device D>
 void dft_abs_layer<T,D>::fp_compute()
 {
   using LocalMatT = El::Matrix<T, D>;
+  pimpl_->setup_fp(
+    static_cast<LocalMatT const&>(this->get_local_prev_activations()));
   pimpl_->do_fp_compute(
     static_cast<LocalMatT const&>(this->get_local_prev_activations()),
     static_cast<LocalMatT&>(this->get_local_activations()));
@@ -325,6 +310,8 @@ template <typename T, El::Device D>
 void dft_abs_layer<T,D>::bp_compute()
 {
   using LocalMatT = El::Matrix<T, D>;
+  pimpl_->setup_fp(
+    static_cast<LocalMatT const&>(this->get_local_prev_error_signals()));
   pimpl_->do_bp_compute(
     static_cast<LocalMatT const&>(this->get_local_prev_error_signals()),
     static_cast<LocalMatT&>(this->get_local_error_signals()));
@@ -334,7 +321,7 @@ template <typename T, El::Device D>
 dft_abs_layer<T,D>::dft_abs_layer(dft_abs_layer const& other)
   : data_type_layer<T>(other),
     pimpl_(other.pimpl_
-           ? make_unique<dft_abs_impl<T,D>>(*(other.pimpl_))
+           ? std::make_unique<dft_abs_impl<T,D>>(*(other.pimpl_))
            : nullptr)
 {}
 

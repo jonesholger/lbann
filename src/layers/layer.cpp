@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -24,7 +24,7 @@
 // permissions and limitations under the license.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "lbann/execution_contexts/sgd_execution_context.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 #include "lbann/io/file_io.hpp"
 #include "lbann/io/persist.hpp"
 #include "lbann/layers/layer.hpp"
@@ -199,6 +199,9 @@ description Layer::get_description() const {
   // DataType
   desc.add("Data type", get_datatype_name());
 
+  // Sub-grid
+  desc.add("Process grid", get_grid_tag());
+
   // Freeze state
   if (is_frozen()) {
     desc.add("Frozen");
@@ -215,6 +218,14 @@ lbann_comm* Layer::get_comm() const {
       "before it was configured");
   }
   return m_model->get_comm();
+}
+
+int Layer::get_grid_tag() const noexcept {
+  return m_grid_tag;
+}
+
+void Layer::set_grid_tag(int tag) {
+  m_grid_tag = tag;
 }
 
 bool Layer::update() {
@@ -386,10 +397,13 @@ bool Layer::is_frozen() const {
   return m_frozen;
 }
 
-void Layer::setup(size_t max_mini_batch_size, DataReaderMetaData& dr_metadata, const El::Grid& grid) {
+void Layer::setup(
+  size_t max_mini_batch_size,
+  DataReaderMetaData& dr_metadata,
+  const std::vector<El::Grid*>& grids) {
   setup_pointers();
   setup_dims(dr_metadata);
-  setup_matrices(grid);
+  setup_matrices(grids);
 
 #ifdef LBANN_HAS_DISTCONV
   prepare_distconv(dr_metadata);

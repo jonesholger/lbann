@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -75,7 +75,7 @@ RegularizedEvolution::RegularizedEvolution(RegularizedEvolution const& other)
 {}
 
 EvalType RegularizedEvolution::evaluate_model(model& m,
-                                              ExecutionContext& ctxt,
+                                              LTFBExecutionContext& ctxt,
                                               data_coordinator& dc) const
 
 {
@@ -129,7 +129,7 @@ EvalType RegularizedEvolution::evaluate_model(model& m,
 }
 
 void RegularizedEvolution::select_next(model& m,
-                                       ltfb::ExecutionContext& ctxt,
+                                       ltfb::LTFBExecutionContext& ctxt,
                                        data_coordinator& dc) const
 {
   auto const& comm = *(m.get_comm());
@@ -235,6 +235,7 @@ void RegularizedEvolution::select_next(model& m,
     auto&& metadata = trainer.get_data_coordinator().get_dr_metadata();
     m.setup(trainer.get_max_mini_batch_size(),
             metadata,
+            trainer.get_grids(),
             /*force*/ true);
   }
 }
@@ -262,6 +263,7 @@ to_lbann(lbann_data::RegularizedEvolution::MetricStrategy strategy)
 
 } // namespace
 
+/** @brief Builder function for RegularizedEvolution. */
 template <>
 std::unique_ptr<lbann::ltfb::RegularizedEvolution>
 lbann::make<lbann::ltfb::RegularizedEvolution>(
@@ -273,7 +275,7 @@ lbann::make<lbann::ltfb::RegularizedEvolution>(
 
   using MutationStrategyType = lbann::ltfb::MutationStrategy;
 
-  return make_unique<lbann::ltfb::RegularizedEvolution>(
+  return std::make_unique<lbann::ltfb::RegularizedEvolution>(
     msg.metric_name(),
     to_lbann(msg.metric_strategy()),
     make_abstract<MutationStrategyType>(msg.mutation_strategy()),

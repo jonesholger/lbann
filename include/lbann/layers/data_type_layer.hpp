@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -217,7 +217,7 @@ protected:
    *  'construct_matrix' function. If any matrices have already been
    *  setup, they are destroyed and reinstantiated.
    */
-  void setup_matrices(const El::Grid& grid) override;
+  void setup_matrices(const std::vector<El::Grid*>& grids) override;
 
   /** Setup layer data.
    *  Called by the 'setup' function. Memory is allocated for

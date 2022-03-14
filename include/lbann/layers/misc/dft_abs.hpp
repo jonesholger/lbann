@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -101,8 +101,6 @@ protected:
   void setup_dims(DataReaderMetaData& dr_metadata) override;
   void fp_compute() override;
   void bp_compute() override;
-  void fp_setup_inputs(El::Int mini_batch_size) override;
-  void bp_setup_gradient_wrt_inputs(El::Int mini_batch_size) override;
 
 private:
   using impl_type = dft_abs_impl<TensorDataType, Device>;

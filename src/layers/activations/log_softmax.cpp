@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -37,6 +37,12 @@ void fp(lbann_comm& comm,
         const El::AbstractDistMatrix<TensorDataType>& input,
         El::AbstractDistMatrix<TensorDataType>& output,
         El::AbstractDistMatrix<TensorDataType>& workspace) {
+
+  // Setup workspace
+  workspace.Empty(false);
+  workspace.AlignWith(input);
+  workspace.Resize(1, input.Width());
+
   // Local matrices
   const auto& local_input = dynamic_cast<const CPUMatDT<TensorDataType>&>(input.LockedMatrix());
   auto& local_output = dynamic_cast<CPUMatDT<TensorDataType>&>(output.Matrix());

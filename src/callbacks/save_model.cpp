@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -93,7 +93,7 @@ bool save_model::do_save_model(model *m) {
 
 // Save model weights
 bool save_model::do_save_model_weights(model *m) {
-  const auto& c = static_cast<sgd_execution_context&>(m->get_execution_context());
+  const auto& c = static_cast<SGDExecutionContext&>(m->get_execution_context());
   // if the checkpoint directory is not defined, bail
   if (m_dir.length() == 0) {
     return false;
@@ -151,13 +151,13 @@ build_save_model_callback_from_pbuf(
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackSaveModel&>(proto_msg);
   if(params.extension().size() != 0) {
-    return make_unique<save_model>(
+    return std::make_unique<save_model>(
       params.dir(),
       params.disable_save_after_training(),
       params.extension());
   }
   else {
-    return make_unique<save_model>(
+    return std::make_unique<save_model>(
       params.dir(),
       params.disable_save_after_training());
   }

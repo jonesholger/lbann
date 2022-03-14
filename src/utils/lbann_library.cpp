@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2021, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -68,14 +68,14 @@ load_inference_model(lbann_comm* lc,
                      std::vector<int> output_dims) {
   persist p;
   p.open_restart(cp_dir.c_str());
-  auto m = make_unique<directed_acyclic_graph_model>(lc, nullptr, nullptr);
+  auto m = std::make_unique<directed_acyclic_graph_model>(lc, nullptr, nullptr);
   m->load_from_checkpoint_shared(p);
   p.close_restart();
 
   // Must use a mock datareader with input and output dims for setup
   // TODO: avoid need for datareader altogether
   auto dr_metadata = mock_dr_metadata(input_dims, output_dims);
-  m->setup(mbs, dr_metadata);
+  m->setup(mbs, dr_metadata, get_trainer().get_grids());
 
   return m;
 }
@@ -84,10 +84,10 @@ load_inference_model(lbann_comm* lc,
 /// Return the
 int allocate_trainer_resources(lbann_comm *comm) {
   auto& arg_parser = global_argument_parser();
-  int procs_per_trainer = arg_parser.get<int>(PROCS_PER_TRAINER);
-  int trainer_grid_height = arg_parser.get<int>(TRAINER_GRID_HEIGHT);
-  int trainer_primary_grid_size = arg_parser.get<int>(TRAINER_PRIMARY_GRID_SIZE);
-  bool trainer_create_two_models = arg_parser.get<bool>(TRAINER_CREATE_TWO_MODELS);
+  int procs_per_trainer = arg_parser.get<int>(LBANN_OPTION_PROCS_PER_TRAINER);
+  int trainer_grid_height = arg_parser.get<int>(LBANN_OPTION_TRAINER_GRID_HEIGHT);
+  int trainer_primary_grid_size = arg_parser.get<int>(LBANN_OPTION_TRAINER_PRIMARY_GRID_SIZE);
+  bool trainer_create_two_models = arg_parser.get<bool>(LBANN_OPTION_TRAINER_CREATE_TWO_MODELS);
 
   if (procs_per_trainer == 0) {
     procs_per_trainer = comm->get_procs_in_world();
@@ -183,12 +183,12 @@ trainer& construct_trainer(lbann_comm* comm,
 
   // If the checkpoint directory has been overridden reset it before
   // setting up the trainer
-  if (arg_parser.get<std::string>(CKPT_DIR) != "") {
+  if (arg_parser.get<std::string>(LBANN_OPTION_CKPT_DIR) != "") {
     for (auto&& c : global_trainer_->get_callbacks()) {
       {
         auto* cb = dynamic_cast<callback::checkpoint*>(c);
         if(cb != nullptr) {
-          cb->set_checkpoint_dir(arg_parser.get<std::string>(CKPT_DIR));
+          cb->set_checkpoint_dir(arg_parser.get<std::string>(LBANN_OPTION_CKPT_DIR));
           if(comm->am_trainer_master()) {
             std::cout << "Setting the checkpoint directory to " << cb->get_checkpoint_dir() << std::endl;
           }
@@ -196,12 +196,12 @@ trainer& construct_trainer(lbann_comm* comm,
       }
     }
   }
-  if (arg_parser.get<std::string>(RESTART_DIR) != "") {
+  if (arg_parser.get<std::string>(LBANN_OPTION_RESTART_DIR) != "") {
     for (auto&& c : global_trainer_->get_callbacks()) {
       {
         auto* cb = dynamic_cast<callback::checkpoint*>(c);
         if(cb != nullptr) {
-          cb->set_restart_dir(arg_parser.get<std::string>(RESTART_DIR));
+          cb->set_restart_dir(arg_parser.get<std::string>(LBANN_OPTION_RESTART_DIR));
           if(comm->am_trainer_master()) {
             std::cout << "Setting the restart directory to " << cb->get_restart_dir() << std::endl;
           }
@@ -268,8 +268,46 @@ trainer& construct_trainer(lbann_comm* comm,
 
   global_trainer_->setup(std::move(io_thread_pool), data_readers);
 
-  if (arg_parser.get<bool>(DISABLE_BACKGROUND_IO_ACTIVITY)) {
+  if (arg_parser.get<bool>(LBANN_OPTION_DISABLE_BACKGROUND_IO_ACTIVITY)) {
     global_trainer_->allow_background_io_activity(false);
+  }
+
+  // Create sub-grids in block order
+  const int num_subgrids_block
+    = arg_parser.get<int>(LBANN_OPTION_NUM_SUBGRIDS_BLOCK_ORDER);
+  if (num_subgrids_block > 0) {
+
+    // Check sub-grid size
+    const int trainer_size = comm->get_procs_per_trainer();
+    const int subgrid_size = trainer_size / num_subgrids_block;
+    if (trainer_size != subgrid_size * num_subgrids_block) {
+      LBANN_ERROR(
+        "attempted to divide a trainer grid with ",trainer_size," processes ",
+        "into ",num_subgrids_block," equally-sized sub-grids");
+    }
+
+    // Construct sub-grids
+    std::vector<int> trainer_ranks(subgrid_size);
+    for (int root_rank=0; root_rank<trainer_size; root_rank+=subgrid_size) {
+      std::iota(trainer_ranks.begin(), trainer_ranks.end(), root_rank);
+      El::mpi::Comm trainer_comm;
+      El::mpi::Group trainer_group, subgrid_group;
+      El::mpi::Dup(comm->get_trainer_comm(), trainer_comm);
+      El::mpi::CommGroup(trainer_comm, trainer_group);
+      El::mpi::Incl(
+        trainer_group,
+        trainer_ranks.size(),
+        trainer_ranks.data(),
+        subgrid_group);
+      global_trainer_->add_grid(
+        make_unique<El::Grid>(
+          std::move(trainer_comm),
+          subgrid_group,
+          subgrid_size,
+          El::COLUMN_MAJOR));
+      El::mpi::Free(trainer_group);
+    }
+
   }
 
   // Report useful information
@@ -299,7 +337,7 @@ std::unique_ptr<thread_pool> construct_io_thread_pool(lbann_comm* comm,
   }
 
   auto& arg_parser = global_argument_parser();
-  int req_io_threads = arg_parser.get<int>(NUM_IO_THREADS);
+  int req_io_threads = arg_parser.get<int>(LBANN_OPTION_NUM_IO_THREADS);
   int num_io_threads = std::max(std::min(max_io_threads, req_io_threads), 1);
 
   auto io_threads_offset = free_core_offset(comm);
@@ -310,7 +348,7 @@ std::unique_ptr<thread_pool> construct_io_thread_pool(lbann_comm* comm,
       << io_threads_offset << std::endl;
   }
 
-  auto io_thread_pool = make_unique<thread_pool>();
+  auto io_thread_pool = std::make_unique<thread_pool>();
   io_thread_pool->launch_pinned_threads(num_io_threads, io_threads_offset);
 
   return io_thread_pool;
@@ -338,7 +376,7 @@ std::unique_ptr<model> build_model_from_prototext(
 
   // Display how the OpenMP threads are provisioned
   auto& arg_parser = global_argument_parser();
-  if (arg_parser.get<bool>(PRINT_AFFINITY)) {
+  if (arg_parser.get<bool>(LBANN_OPTION_PRINT_AFFINITY)) {
     display_omp_setup();
   }
 
@@ -356,12 +394,12 @@ std::unique_ptr<model> build_model_from_prototext(
 
   // If the checkpoint directory has been overridden reset it before
   // setting up the model
-  if (arg_parser.get<std::string>(CKPT_DIR) != "") {
+  if (arg_parser.get<std::string>(LBANN_OPTION_CKPT_DIR) != "") {
     for (auto&& c : ret_model->get_callbacks()) {
       {
         auto* cb = dynamic_cast<callback::dump_weights*>(c);
         if(cb != nullptr) {
-          cb->set_target_dir(arg_parser.get<std::string>(CKPT_DIR));
+          cb->set_target_dir(arg_parser.get<std::string>(LBANN_OPTION_CKPT_DIR));
           if(comm->am_trainer_master()) {
             std::cout << "Setting the dump weights directory to " << cb->get_target_dir() << std::endl;
           }
@@ -370,7 +408,7 @@ std::unique_ptr<model> build_model_from_prototext(
       {
         auto* cb = dynamic_cast<callback::save_model*>(c);
         if(cb != nullptr) {
-          cb->set_target_dir(arg_parser.get<std::string>(CKPT_DIR));
+          cb->set_target_dir(arg_parser.get<std::string>(LBANN_OPTION_CKPT_DIR));
           if(comm->am_trainer_master()) {
             std::cout << "Setting the dump weights directory to " << cb->get_target_dir() << std::endl;
           }
@@ -379,7 +417,7 @@ std::unique_ptr<model> build_model_from_prototext(
     }
   }
 
-  if (arg_parser.get<std::string>(LOAD_MODEL_WEIGHTS_DIR) != "") {
+  if (arg_parser.get<std::string>(LBANN_OPTION_LOAD_MODEL_WEIGHTS_DIR) != "") {
     callback::load_model* cb = nullptr;
     for (auto&& c : ret_model->get_callbacks()) {
       cb = dynamic_cast<callback::load_model*>(c);
@@ -390,8 +428,8 @@ std::unique_ptr<model> build_model_from_prototext(
 
     std::string active_load_model_dir;
     std::string load_model_dir =
-      arg_parser.get<std::string>(LOAD_MODEL_WEIGHTS_DIR);
-    if (arg_parser.get<bool>(LOAD_MODEL_WEIGHTS_DIR_IS_COMPLETE)) {
+      arg_parser.get<std::string>(LBANN_OPTION_LOAD_MODEL_WEIGHTS_DIR);
+    if (arg_parser.get<bool>(LBANN_OPTION_LOAD_MODEL_WEIGHTS_DIR_IS_COMPLETE)) {
       active_load_model_dir = load_model_dir;
     }
     else {
@@ -413,7 +451,7 @@ std::unique_ptr<model> build_model_from_prototext(
     if(cb == nullptr) {
       std::vector<std::string> dirs = {active_load_model_dir};
       std::unique_ptr<callback::load_model> load_model_cb =
-        make_unique<callback::load_model>(dirs);
+        std::make_unique<callback::load_model>(dirs);
       cb = load_model_cb.get();
       ret_model->add_callback(std::move(load_model_cb));
 #ifdef LBANN_DEBUG
@@ -422,7 +460,7 @@ std::unique_ptr<model> build_model_from_prototext(
       }
 #endif
     }else {
-      cb->add_dir(arg_parser.get<std::string>(LOAD_MODEL_WEIGHTS_DIR));
+      cb->add_dir(arg_parser.get<std::string>(LBANN_OPTION_LOAD_MODEL_WEIGHTS_DIR));
     }
   }
 

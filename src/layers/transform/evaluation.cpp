@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2014-2019, Lawrence Livermore National Security, LLC.
+// Copyright (c) 2014-2022, Lawrence Livermore National Security, LLC.
 // Produced at the Lawrence Livermore National Laboratory.
 // Written by the LBANN Research Team (B. Van Essen, et al.) listed in
 // the CONTRIBUTORS file. <lbann-dev@llnl.gov>
@@ -28,7 +28,7 @@
 #include "lbann/comm_impl.hpp"
 #include "lbann/layers/transform/evaluation.hpp"
 #include "lbann/models/model.hpp"
-#include "lbann/execution_contexts/sgd_execution_context.hpp"
+#include "lbann/execution_algorithms/sgd_execution_context.hpp"
 #include "lbann/utils/exception.hpp"
 #include "lbann/utils/hydrogen_utils.hpp"
 #ifdef LBANN_HAS_GPU
@@ -252,7 +252,7 @@ void abstract_evaluation_layer<TensorDataType>::fp_compute() {
 
 template <typename TensorDataType>
 void abstract_evaluation_layer<TensorDataType>::bp_compute() {
-  const auto& context = static_cast<sgd_execution_context&>(this->m_model->get_execution_context());
+  const auto& context = static_cast<SGDExecutionContext&>(this->m_model->get_execution_context());
   const auto mini_batch_size = context.get_effective_mini_batch_size();
   El::Fill(this->get_error_signals(), TensorDataType(m_scale / mini_batch_size));
 }
