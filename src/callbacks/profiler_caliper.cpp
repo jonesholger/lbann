@@ -24,7 +24,8 @@
 // permissions and limitations under the license.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include "lbann_config.hpp"
+#ifdef LBANN_HAS_CALIPER
 #include "lbann/callbacks/profiler_caliper.hpp"
 #include "lbann/utils/serialize.hpp"
 
@@ -35,8 +36,6 @@
 #include <vector>
 #include <regex>
 
-
-#ifdef LBANN_HAS_CALIPER
 namespace lbann {
 namespace callback {
 
@@ -49,6 +48,7 @@ vector<string> split(const string str, const string regex_str)
                                   sregex_token_iterator());
     return list;
 }
+
 
 profiler_caliper::profiler_caliper(bool skip_init) :
     callback_base(), m_skip_init(skip_init) {
