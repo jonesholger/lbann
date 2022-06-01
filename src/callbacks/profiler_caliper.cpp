@@ -51,8 +51,13 @@ vector<string> split(const string str, const string regex_str)
 }
 
 
-profiler_caliper::profiler_caliper(bool skip_init) :
+bool profiler_caliper::s_autotune=false;
+int profiler_caliper::s_tuned_omp_threads=0;
+
+profiler_caliper::profiler_caliper(bool skip_init,bool autotune, int tuned_omp_threads) :
     callback_base(), m_skip_init(skip_init) {
+  profiler_caliper::s_autotune = autotune;
+  profiler_caliper::s_tuned_omp_threads=tuned_omp_threads;
   struct adiak_configuration cc;
   adiak::init(NULL);
   adiak::user();
@@ -257,7 +262,7 @@ build_profiler_caliper_callback_from_pbuf(
   const google::protobuf::Message& proto_msg, const std::shared_ptr<lbann_summary>&) {
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackProfilerCaliper&>(proto_msg);
-  return make_unique<profiler_caliper>(params.skip_init());
+  return make_unique<profiler_caliper>(params.skip_init(),params.autotune(),params.tuned_omp_threads());
 }
 
 

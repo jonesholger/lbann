@@ -28,6 +28,11 @@
 #include "lbann/utils/im2col.hpp"
 #include "lbann/utils/exception.hpp"
 
+#ifdef LBANN_HAS_CALIPER
+// pick up profiler_caliper statics to autotune or set nthreads in im2col
+#include "lbann/callbacks/profiler_caliper.hpp"
+#endif
+
 namespace lbann {
 
 template <typename TensorDataType>
@@ -455,16 +460,14 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
 
 
 #ifdef LBANN_HAS_CALIPER
-  static bool autotune=true;
-  cali::RegionProfile rp;
-  std::vector<int> nthreads = {32,2,16,3,8,4};
-  double prev_time = 0.0;
-  double curr_time = 0.0;
+    
+  if(callback::profiler_caliper::s_autotune) {
+    cali::RegionProfile rp;
+    std::vector<int> nthreads_to_test = {2,3,4};  // test down to these small number of threads by default
+    double prev_time = 0.0;
+    double curr_time = 0.0;
 
-  std::vector<std::tuple<int,double>> measure;
-
-  
-  if(autotune) {
+    std::vector<std::tuple<int,double>> measure;
 
     //override OMP_NUM_THREADS to Num Processing Units
     hwloc_topology_t topo;
@@ -472,10 +475,15 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
     hwloc_topology_load(topo);
     //max threads via topo Processing Units (PU)
     unsigned int nbthreads = hwloc_get_nbobjs_by_type(topo,HWLOC_OBJ_PU);
+    fprintf(stderr,"max threads via hwloc is %d\n",nbthreads);
+    while(nbthreads > 4) {
+      nthreads_to_test.push_back(nbthreads);
+      nbthreads /= 2;
+    }
     //omp_set_num_threads(nbthreads);
     omp_set_dynamic(0);
 
-    for(int n : nthreads) {
+    for(int n : nthreads_to_test) {
       omp_set_num_threads(n);
       rp.start();
       CALI_MARK_BEGIN("im2col_2d");
@@ -510,10 +518,22 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
            }); 
     int tuned_threads = std::get<0>(*min_tuple);
     std::cerr << "tuned threads: " << tuned_threads << std::endl;   
-    autotune=false;
+    callback::profiler_caliper::s_autotune=false;
     //set max threads to tuned value
     omp_set_num_threads(tuned_threads);
+    auto s = std::to_string(tuned_threads);
+    adiak::value("im2col_threads",s.c_str());
   } //if autotune
+
+  // override based on reading in im2col_threads in driving script
+  if(callback::profiler_caliper::s_tuned_omp_threads > 0) {
+    static bool set_once = true;
+    if(set_once) {
+      omp_set_num_threads(callback::profiler_caliper::s_tuned_omp_threads);
+      std::cerr << "user provided tuned threads:" << callback::profiler_caliper::s_tuned_omp_threads << std::endl;
+      set_once = false;
+    }
+  }
   
 #endif
 

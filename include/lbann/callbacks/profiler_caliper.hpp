@@ -46,7 +46,7 @@ namespace callback {
  */
 class profiler_caliper : public callback_base {
  public:
-  profiler_caliper(bool skip_init = true);
+  profiler_caliper(bool skip_init = true, bool autotune=false, int tuned_omp_threads=0);
   profiler_caliper(const profiler_caliper&) = default;
   profiler_caliper& operator=(const profiler_caliper&) = default;
   profiler_caliper* copy() const override {
@@ -84,6 +84,9 @@ class profiler_caliper : public callback_base {
   void start() {  // used during skip_init logic
     m_manager.start();
   }
+
+  static bool s_autotune;
+  static int s_tuned_omp_threads;
 
   /** @name Serialization */
   ///@{
