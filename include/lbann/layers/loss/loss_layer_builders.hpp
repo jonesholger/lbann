@@ -23,29 +23,20 @@
 // implied. See the License for the specific language governing
 // permissions and limitations under the license.
 ////////////////////////////////////////////////////////////////////////////////
+#ifndef LBANN_LAYERS_LOSS_LOSS_BUILDERS_HPP_INCLUDED
+#define LBANN_LAYERS_LOSS_LOSS_BUILDERS_HPP_INCLUDED
 
-#include "lbann/layers/transform/batchwise_reduce_sum.hpp"
-#include "lbann/proto/helpers.hpp"
-
-#include <lbann/proto/proto_common.hpp>
-#include <layers.pb.h>
+#include "lbann/layers/layer.hpp"
 
 namespace lbann {
 
-template <typename TensorDataType, data_layout Layout, El::Device Device>
-std::unique_ptr<Layer> build_batchwise_reduce_sum_layer_from_pbuf(
-  lbann_comm* comm, lbann_data::Layer const& proto_layer)
-{
-  LBANN_ASSERT_MSG_HAS_FIELD(proto_layer, batchwise_reduce_sum);
-  using LayerType = batchwise_reduce_sum_layer<
-    TensorDataType,
-    data_layout::DATA_PARALLEL,
-    Device>;
-  return std::make_unique<LayerType>();
-}
-
-#define PROTO_DEVICE(T, Device) \
-  LBANN_LAYER_BUILDER_ETI(batchwise_reduce_sum, T, Device)
-#include "lbann/macros/instantiate_device.hpp"
+LBANN_DEFINE_LAYER_BUILDER(categorical_accuracy);
+LBANN_DEFINE_LAYER_BUILDER(cross_entropy);
+LBANN_DEFINE_LAYER_BUILDER(l1_norm);
+LBANN_DEFINE_LAYER_BUILDER(l2_norm2);
+LBANN_DEFINE_LAYER_BUILDER(mean_absolute_error);
+LBANN_DEFINE_LAYER_BUILDER(mean_squared_error);
+LBANN_DEFINE_LAYER_BUILDER(top_k_categorical_accuracy);
 
 } // namespace lbann
+#endif // LBANN_LAYERS_LOSS_LOSS_BUILDERS_HPP_INCLUDED

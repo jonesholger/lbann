@@ -31,6 +31,9 @@ Support for new layers:
 - Updated deconvolution layer to match PyTorch's API
 
 Python front-end:
+ - Added support for buidling and launching jobs on Fugaku
+ - Added Riken as a known compute center
+ - Added support for PJM as job launcher
 
 Performance optimizations:
  - Enabled the input layers to use a view of the I/O buffers in the
@@ -68,6 +71,10 @@ I/O & data readers:
    models.
  - Added support in the generic data reader and synthetic data reader
    clases for arbitrary data fields.
+ - Added support for data readers to return full Conduit nodes to the
+   Data Coordinator.
+ - Data coordinator can now directly return packed data fields to
+   input layers.
 
 Build system:
 

@@ -113,6 +113,10 @@ public:
   data_layout get_data_layout() const final { return Layout; }
   El::Device get_device_allocation() const final { return Device; }
 
+#ifdef LBANN_HAS_ONNX
+  std::string get_onnx_op_type() const override { return "Softmax"; }
+#endif //LBANN_HAS_ONNX
+
   void setup_dims(DataReaderMetaData& dr_metadata) final {
     data_type_layer<TensorDataType>::setup_dims(dr_metadata);
     this->set_output_dims(this->get_input_dims());
@@ -276,9 +280,6 @@ void softmax_distconv_adapter<TensorDataType, T_layout, Dev>::setup_layer(
   m_softmax->setup(this->get_prev_activations(), mode);
 }
 #endif // LBANN_HAS_DISTCONV
-
-
-LBANN_DEFINE_LAYER_BUILDER(softmax);
 
 #ifndef LBANN_SOFTMAX_LAYER_INSTANTIATE
 #define PROTO_DEVICE(T, Device) \

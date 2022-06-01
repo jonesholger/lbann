@@ -28,6 +28,7 @@
 #define LBANN_LAYERS_REGULARIZERS_ENTRYWISE_BATCH_NORMALIZATION_HPP_INCLUDED
 
 #include "lbann/layers/data_type_layer.hpp"
+#include "lbann/layers/layer.hpp"
 #include "lbann/models/model.hpp"
 #include "lbann/utils/memory.hpp"
 
@@ -126,15 +127,16 @@ protected:
     this->set_output_dims(this->get_input_dims());
     const auto output_dims_ = this->get_output_dims();
     std::vector<size_t> output_dims(output_dims_.begin(), output_dims_.end());
-    const auto output_size = this->get_output_size();
 
     // Initialize default weights if none are provided
     if (this->num_weights() > 2) {
-      std::stringstream err;
-      err << "attempted to setup layer \"" << this->get_name() << "\" "
-          << "with an invalid number of weights "
-          << "(found " << this->num_weights() << ", expected 2)";
-      LBANN_ERROR(err.str());
+      LBANN_ERROR("attempted to setup layer \"",
+                  this->get_name(),
+                  "\" ",
+                  "with an invalid number of weights ",
+                  "(found ",
+                  this->num_weights(),
+                  ", expected 2)");
     }
     this->set_num_weights(2);
     if (!this->has_weights(0)) {
@@ -190,8 +192,9 @@ private:
    * These are fused for performance when doing non-local batchnorm.
    */
   std::unique_ptr<AbsDistMatrixType> m_batch_statistics_gradient;
-
 };
+
+LBANN_DEFINE_LAYER_BUILDER(entrywise_batch_normalization);
 
 #ifndef LBANN_ENTRYWISE_BATCH_NORMALIZATION_LAYER_INSTANTIATE
 #define PROTO_DEVICE(T, Device) \

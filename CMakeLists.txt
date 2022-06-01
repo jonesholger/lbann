@@ -26,7 +26,7 @@
 cmake_minimum_required(VERSION 3.21)
 cmake_policy(VERSION 3.21)
 
-project(LBANN CXX)
+project(LBANN C CXX)
 
 # Prevent in-source builds
 if (PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
@@ -205,9 +205,14 @@ find_package(Threads REQUIRED)
 # Argument parsing backend
 find_package(Clara REQUIRED)
 
-find_package(CEREAL CONFIG REQUIRED)
+find_package(CEREAL CONFIG REQUIRED NAMES CEREAL cereal)
 set(LBANN_HAS_CEREAL ${CEREAL_FOUND})
 # The imported target is just called "cereal". Super.
+if (TARGET cereal)
+  set(CEREAL_LIBRARIES cereal)
+elseif (TARGET cereal::cereal)
+  set(CEREAL_LIBRARIES cereal::cereal)
+endif ()
 
 # Setup the linear algebra library
 find_package(Hydrogen 1.5.0 CONFIG REQUIRED)
@@ -335,9 +340,9 @@ if (LBANN_HAS_CUDA)
     set(LBANN_WITH_CUDNN ON)
   endif ()
 
-  find_package(CUDAToolkit REQUIRED) # Hydrogen will have found this,
-                                     # but it doesn't hurt to find it
-                                     # again.
+  find_package(CUDAToolkit 11.0.0 REQUIRED)
+  # Hydrogen will have found this, but it doesn't hurt to find it
+  # again.
   find_package(cuDNN REQUIRED)
   set(LBANN_HAS_CUDNN ${cuDNN_FOUND})
   set(LBANN_HAS_DNN_LIB ${cuDNN_FOUND})
@@ -532,6 +537,7 @@ if (LBANN_WITH_UNIT_TESTING)
   include(Catch)
   add_subdirectory(src/callbacks/unit_test)
   add_subdirectory(src/execution_algorithms/unit_test)
+  add_subdirectory(src/data_coordinator/unit_test)
   add_subdirectory(src/data_readers/unit_test)
   add_subdirectory(src/layers/unit_test)
   add_subdirectory(src/layers/activations/unit_test)
@@ -612,7 +618,7 @@ target_link_libraries(lbann PUBLIC
   ${CLARA_LIBRARIES}
   ${LBANN_PYTHON_LIBS}
   protobuf::libprotobuf
-  cereal
+  ${CEREAL_LIBRARIES}
   ZSTR::ZSTR)
 
 if (LBANN_HAS_OPENCV)
@@ -665,6 +671,12 @@ if (LBANN_HAS_CUDA)
       PROPERTIES
       CUDA_SEPARABLE_COMPILATION ON)
   endif ()
+
+  # We leak some C++17 into .cu files. Oops, but also CUDA 11 has been
+  # out for a while.
+  set_target_properties(lbann
+    PROPERTIES
+    CUDA_STANDARD 17)
 
   # Enable device lambdas with nvcc
   check_compiler_flag(CUDA "--expt-extended-lambda"
@@ -823,6 +835,14 @@ install(
 # approaches, we should use them.
 if (LBANN_HAS_PYTHON_FRONTEND)
 
+  include(LBANNWritePythonFeatures)
+  get_property(LBANN_HAS_VARIABLES DIRECTORY PROPERTY VARIABLES)
+  list(FILTER LBANN_HAS_VARIABLES INCLUDE REGEX "^LBANN_HAS_.*")
+  set(_LBANN_FEATURES_FILE "${CMAKE_BINARY_DIR}/lbann_features.py")
+  write_python_features_module(
+    OUTPUT_FILE "${_LBANN_FEATURES_FILE}"
+    VARIABLES ${LBANN_HAS_VARIABLES})
+
   # Construct config file
   # NOTE (trb): python_config.ini is installed by setup.py
   set(_PYTHON_CONFIG_INI ${CMAKE_BINARY_DIR}/python_config.ini)
@@ -936,6 +956,7 @@ append_str_tf(_str
   LBANN_HAS_HYDROGEN
   LBANN_HAS_LBANN_PROTO
   LBANN_HAS_NCCL2
+  LBANN_HAS_NVSHMEM
   LBANN_HAS_ONEDNN
   LBANN_HAS_ONEDNN_CPU
   LBANN_HAS_ONEDNN_GPU

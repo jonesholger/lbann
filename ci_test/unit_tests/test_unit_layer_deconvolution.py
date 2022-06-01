@@ -113,7 +113,7 @@ def pytorch_deconvolution(
 # Setup LBANN experiment
 # ==============================================
 
-def setup_experiment(lbann):
+def setup_experiment(lbann, weekly):
     """Construct LBANN experiment.
 
     Args:
@@ -125,7 +125,7 @@ def setup_experiment(lbann):
     model = construct_model(lbann)
     data_reader = construct_data_reader(lbann)
     optimizer = lbann.NoOptimizer()
-    return trainer, model, data_reader, optimizer
+    return trainer, model, data_reader, optimizer, None # Don't request any specific number of nodes
 
 def construct_model(lbann):
     """Construct LBANN model.
@@ -142,9 +142,9 @@ def construct_model(lbann):
                               initializer=lbann.ConstantInitializer(value=0.0),
                               name='input_weights')
     x = lbann.Sum(lbann.Reshape(lbann.Input(data_field='samples'),
-                                dims=tools.str_list(_sample_dims)),
+                                dims=_sample_dims),
                   lbann.WeightsLayer(weights=x_weights,
-                                     dims=tools.str_list(_sample_dims)))
+                                     dims=_sample_dims))
     x_lbann = x
 
     # Objects for LBANN model
@@ -166,12 +166,12 @@ def construct_model(lbann):
     # Apply convolution
     kernel_weights = lbann.Weights(
         optimizer=lbann.SGD(),
-        initializer=lbann.ValueInitializer(values=tools.str_list(np.nditer(kernel))),
+        initializer=lbann.ValueInitializer(values=np.nditer(kernel)),
         name='kernel1'
     )
     bias_weights = lbann.Weights(
         optimizer=lbann.SGD(),
-        initializer=lbann.ValueInitializer(values=tools.str_list(np.nditer(bias))),
+        initializer=lbann.ValueInitializer(values=np.nditer(bias)),
         name='bias1'
     )
     x = x_lbann
@@ -221,7 +221,7 @@ def construct_model(lbann):
     # Apply convolution
     kernel_weights = lbann.Weights(
         optimizer=lbann.SGD(),
-        initializer=lbann.ValueInitializer(values=tools.str_list(np.nditer(kernel))),
+        initializer=lbann.ValueInitializer(values=np.nditer(kernel)),
         name='kernel2'
     )
     x = x_lbann

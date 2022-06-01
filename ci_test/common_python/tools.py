@@ -679,7 +679,7 @@ def create_tests(setup_func,
         # Make sure test name is prefixed with 'test_'
         test_name_base = 'test_' + test_name_base
 
-    def test_func(cluster, dirname):
+    def test_func(cluster, dirname, weekly):
         """Function that can interact with PyTest.
 
         Returns a dict containing log files and other output data.
@@ -696,8 +696,11 @@ def create_tests(setup_func,
         import lbann.contrib.launcher
 
         # Setup LBANN experiment
-        trainer, model, data_reader, optimizer = setup_func(lbann)
+        trainer, model, data_reader, optimizer, req_num_nodes = setup_func(lbann, weekly)
 
+        if req_num_nodes:
+            kwargs['nodes'] = req_num_nodes
+        
         # Configure kwargs to LBANN launcher
         _kwargs = copy.deepcopy(kwargs)
         if 'work_dir' not in _kwargs:
@@ -711,8 +714,8 @@ def create_tests(setup_func,
             del _kwargs['work_subdir']
 
         # Delete the work directory
-        if os.path.isdir(_kwargs['work_dir']):
-            shutil.rmtree(_kwargs['work_dir'])
+        #if os.path.isdir(_kwargs['work_dir']):
+        #    shutil.rmtree(_kwargs['work_dir'])
 
         if 'job_name' not in _kwargs:
             _kwargs['job_name'] = f'lbann_{test_name}'
@@ -816,11 +819,6 @@ def make_iterable(obj):
         return obj
     else:
         return (obj,)
-
-
-def str_list(it):
-    """Convert an iterable object to a space-separated string"""
-    return ' '.join([str(i) for i in make_iterable(it)])
 
 # Define evaluation function
 def collect_metrics_from_log_func(log_file, key):

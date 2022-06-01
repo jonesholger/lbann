@@ -22,36 +22,56 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 // implied. See the License for the specific language governing
 // permissions and limitations under the license.
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-#include <catch2/catch.hpp>
-#include "TestHelpers.hpp"
-#include "MPITestHelpers.hpp"
+syntax = "proto3";
 
-// The code being tested
-#include <lbann/callbacks/export_onnx.hpp>
+import "google/protobuf/any.proto";
 
-#include "lbann/callbacks/callback.hpp"
-#include <google/protobuf/message.h>
-#include <lbann/base.hpp>
+package lbann_testing;
 
-#include <onnx/onnx_pb.h>
+enum MyEnum {
+  ZERO = 0;
+  ONE = 1;
+  TWO = 2;
+}
 
-#include <iostream>
-#include <memory>
-
-
-using unit_test::utilities::IsValidPtr;
-TEST_CASE("Serializing \"export onnx\" callback",
-          "[mpi][callback][serialize][onnx]")
+message SimpleMesg
 {
-  using CallbackType = lbann::callback::export_onnx;
+  int32 my_int32 = 1;
+  float my_float = 2;
+  string my_string = 3;
+  MyEnum my_enum = 4;
+}
 
-  auto& world_comm = unit_test::utilities::current_world_comm();
-  auto const& g = world_comm.get_trainer_grid();
-  lbann::utils::grid_manager mgr(g);
+message HasAOneofField
+{
+  oneof my_oneof {
+    uint64 my_uint64 = 1;
+    int32 my_int32 = 2;
+    string my_string = 3;
+    SimpleMesg my_simple_msg = 4;
+  }
+  bool another_field = 10;
+}
 
-  CallbackType callback();
+message HasRepeatedPODFields
+{
+  repeated float my_floats = 1;
+  repeated double my_doubles = 2;
+  repeated uint32 my_uint32s = 3;
+  repeated int64 my_int64s = 4;
+  repeated MyEnum my_enums = 5;
+}
 
-  // FIXME: Testing if onnx is defined? How to do this?
+message HasRepeatedPtrFields
+{
+  repeated SimpleMesg my_simple_msgs = 1;
+  repeated string my_strings = 2;
+}
+
+message HasAnyField
+{
+  google.protobuf.Any my_any = 1;
+  int32 my_non_any = 2;
 }

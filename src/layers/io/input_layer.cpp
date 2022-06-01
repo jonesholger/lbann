@@ -24,6 +24,8 @@
 // permissions and limitations under the license.
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "lbann/layers/layer.hpp"
+#include <type_traits>
 #define LBANN_INPUT_LAYER_INSTANTIATE
 #include "lbann/layers/io/input_layer.hpp"
 
@@ -31,7 +33,31 @@
 #include "lbann/execution_algorithms/execution_context.hpp"
 #include "lbann/execution_algorithms/sgd_execution_context.hpp"
 #include "lbann/utils/profiling.hpp"
+#include "lbann/utils/protobuf.hpp"
 #include "lbann/utils/serialize.hpp"
+
+template <typename T, lbann::data_layout L, El::Device D>
+std::unique_ptr<lbann::Layer>
+lbann::build_input_layer_from_pbuf(lbann_comm* comm,
+                                   lbann_data::Layer const& proto_layer)
+{
+  const auto& params = proto_layer.input();
+  const auto& data_field = params.data_field();
+  if constexpr (L != data_layout::DATA_PARALLEL) {
+    LBANN_ERROR("input layer is only supported with "
+                "a data-parallel layout");
+  }
+  if constexpr (std::is_same_v<T, DataType> &&
+                (L == data_layout::DATA_PARALLEL)) {
+    return std::make_unique<
+      input_layer<DataType, data_layout::DATA_PARALLEL, D>>(comm, data_field);
+  }
+  else {
+    LBANN_ERROR("Input layers are only valid with "
+                "TensorDataType == DataType and Layout == DATA_PARALLEL");
+  }
+  return nullptr;
+}
 
 namespace lbann {
 
@@ -164,8 +190,7 @@ void input_layer<T,L,D>::fill_onnx_node(onnx::GraphProto& graph) const
     auto* input = graph.add_input();
     input->set_name(this->get_name() + "_" + std::to_string(idx));
     auto* input_type = input->mutable_type();
-    // FIXME: enum type. 1 is float. Get TensorDataType?
-    input_type->mutable_tensor_type()->set_elem_type(1);
+    input_type->mutable_tensor_type()->set_elem_type(onnx::TensorProto::FLOAT);
 
     auto* dims = input_type->mutable_tensor_type()->mutable_shape()->add_dim();
     dims->set_dim_param("batch");
@@ -506,7 +531,8 @@ keep_original_gradient_wrt_outputs(int index) const {
 #endif // LBANN_HAS_DISTCONV
 
 #define PROTO_DEVICE(T, Device) \
-  template class input_layer<T, data_layout::DATA_PARALLEL, Device>
+  template class input_layer<T, data_layout::DATA_PARALLEL, Device>; \
+  LBANN_LAYER_BUILDER_ETI(input, T, Device)
 
 #include "lbann/macros/instantiate_device.hpp"
 

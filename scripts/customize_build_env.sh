@@ -29,7 +29,7 @@ set_center_specific_fields()
         elif [[ ${DOMAINNAME} = "riken.jp" ]]; then
             CENTER="riken"
         else
-            CENTER="llnl_lc"
+            CENTER="unknown"
         fi
         COMPILER="gnu"
     fi
@@ -104,10 +104,11 @@ set_center_specific_modules()
                 # MODULE_CMD="module --force unload StdEnv; module load clang/12.0.1 cuda/11.1.1 spectrum-mpi/rolling-release python/3.7.2 essl/6.2.1"
                 ;;
             "broadwell" | "haswell" | "sandybridge") # Pascal, RZHasGPU, Surface
-                MODULE_CMD="module --force unload StdEnv; module load clang/12.0.1 cuda/11.4.1 mvapich2/2.3.6 python/3.7.2"
+                MODULE_CMD_GCC="module --force unload StdEnv; module load gcc/8.3.1 cuda/11.4.1 mvapich2/2.3 python/3.7.2"
+                MODULE_CMD_CLANG="module --force unload StdEnv; module load clang/12.0.1 cuda/11.4.1 mvapich2/2.3.6 python/3.7.2"
                 ;;
-            "ivybridge") # Catalyst
-                MODULE_CMD="module --force unload StdEnv; module load clang/12.0.1 mvapich2/2.3.6 python/3.7.2"
+            "ivybridge" | "cascadelake") # Catalyst, Ruby
+                MODULE_CMD="module --force unload StdEnv; module load gcc/10.2.1 mvapich2/2.3 python/3.7.2"
                 ;;
             "zen" | "zen2") # Corona
                 MODULE_CMD="module --force unload StdEnv; module load clang/11.0.0 python/3.7.2 opt rocm/4.2.0 openmpi-gnu/4.0"
@@ -157,35 +158,47 @@ set_center_specific_spack_dependencies()
     local spack_arch_target="$2"
 
     if [[ ${center} = "llnl_lc" ]]; then
-        # Note (tym1 7/7/21): Emergency bugfix. Restore once the
-        # buildcache for Hydrogen has been updated.
+        if [[ -z "${SKIP_MIRRORS:-}" ]]; then
+            POSSIBLE_MIRRORS="/p/vast1/lbann/spack/mirror /p/vast1/atom/spack/mirror"
+            for m in ${POSSIBLE_MIRRORS}
+            do
+                if [[ -r "${m}" ]]; then
+                    MIRRORS="${m} $MIRRORS"
+                fi
+            done
+        fi
         # MIRRORS="/p/vast1/lbann/spack/mirror /p/vast1/atom/spack/mirror"
         case ${spack_arch_target} in
             "power9le") # Lassen
+                CENTER_COMPILER="%gcc"
                 CENTER_DEPENDENCIES="^spectrum-mpi ^openblas@0.3.12 threads=openmp ^cuda@11.1.105 ^libtool@2.4.2 ^python@3.9.10"
-                CENTER_FLAGS="+gold"
                 CENTER_BLAS_LIBRARY="blas=openblas"
-                # CENTER_DEPENDENCIES="%clang ^spectrum-mpi ^cuda@11.1.105 ^libtool@2.4.2 ^python@3.9.10"
-                # CENTER_FLAGS="+lld"
+                # CENTER_COMPILER="%clang"
+                # CENTER_DEPENDENCIES="^spectrum-mpi ^cuda@11.1.105 ^libtool@2.4.2 ^python@3.9.10"
                 # CENTER_BLAS_LIBRARY="blas=essl"
                 ;;
             "power8le") # Ray
+                CENTER_COMPILER="%gcc"
                 CENTER_DEPENDENCIES="^spectrum-mpi ^openblas@0.3.12 threads=openmp ^cuda@11.1.105 ^libtool@2.4.2 ^python@3.9.10"
-                CENTER_FLAGS="+gold"
                 CENTER_BLAS_LIBRARY="blas=openblas"
+                # CENTER_COMPILER="%clang"
                 # CENTER_DEPENDENCIES="%clang ^spectrum-mpi ^cuda@11.1.105 ^libtool@2.4.2 ^py-packaging@17.1 ^python@3.9.10 ^py-scipy@1.6.3"
-                # CENTER_FLAGS="+lld"
                 # CENTER_BLAS_LIBRARY="blas=essl"
                 ;;
-            "broadwell" | "haswell" | "sandybridge" | "ivybridge") # Pascal, RZHasGPU, Surface, Catalyst
+            "broadwell" | "haswell" | "sandybridge") # Pascal, RZHasGPU, Surface
                 # On LC the mvapich2 being used is built against HWLOC v1
-               CENTER_DEPENDENCIES="%clang ^mvapich2 ^hwloc@1.11.13 ^libtool@2.4.2 ^python@3.9.10"
-               CENTER_FLAGS="+lld"
+                CENTER_COMPILER="%clang"
+                CENTER_DEPENDENCIES="^mvapich2 ^hwloc@1.11.13 ^libtool@2.4.2 ^python@3.9.10"
+                ;;
+            "ivybridge" | "cascadelake") # Catalyst, Ruby
+                # On LC the mvapich2 being used is built against HWLOC v1
+                CENTER_COMPILER="%gcc"
+                CENTER_DEPENDENCIES="^mvapich2 ^hwloc@1.11.13 ^libtool@2.4.2 ^python@3.9.10"
                 ;;
             "zen" | "zen2") # Corona
                 # On LC the mvapich2 being used is built against HWLOC v1
+                CENTER_COMPILER="%clang"
                 CENTER_DEPENDENCIES="^openmpi ^hwloc@2.3.0"
-                CENTER_FLAGS="+lld"
                 ;;
             *)
                 echo "No center-specified CENTER_DEPENDENCIES for ${spack_arch_target} at ${center}."
@@ -206,8 +219,9 @@ set_center_specific_spack_dependencies()
                 CENTER_DEPENDENCIES="^openmpi"
                 ;;
             "zen3") # Perlmutter
-                CENTER_DEPENDENCIES="%cce@13.0.0 ^mpich@8.1.12 ^python@3.9.4 ^cuda+allow-unsupported-compilers"
-		CENTER_BLAS_LIBRARY="blas=libsci"
+                CENTER_COMPILER="%cce@13.0.0"
+                CENTER_DEPENDENCIES="^mpich@8.1.12 ^python@3.9.4 ^cuda+allow-unsupported-compilers"
+                CENTER_BLAS_LIBRARY="blas=libsci"
                 ;;
             *)
                 echo "No center-specified CENTER_DEPENDENCIES for ${spack_arch_target} at ${center}."
@@ -226,7 +240,7 @@ set_center_specific_spack_dependencies()
         case ${spack_arch_target} in
             "skylake")
                 CENTER_DEPENDENCIES="^hdf5+hl"
-		CENTER_BLAS_LIBRARY="blas=accelerate"
+                CENTER_BLAS_LIBRARY="blas=accelerate"
                 ;;
             *)
                 echo "No center-specified CENTER_DEPENDENCIES for ${spack_arch_target} at ${center}."
@@ -246,7 +260,7 @@ set_center_specific_externals()
 
     if [[ ${center} = "llnl_lc" ]]; then
         case ${spack_arch_target} in
-            "broadwell" | "haswell" | "sandybridge")
+            "broadwell" | "haswell" | "sandybridge" | "ivybridge")
 cat <<EOF  >> ${yaml}
   packages:
     rdma-core:

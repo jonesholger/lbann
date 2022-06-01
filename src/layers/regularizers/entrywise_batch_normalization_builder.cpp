@@ -24,26 +24,35 @@
 // permissions and limitations under the license.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "lbann/layers/misc/one_hot.hpp"
-#include "lbann/proto/helpers.hpp"
+#include "lbann/layers/regularizers/entrywise_batch_normalization.hpp"
 
-#include <lbann/proto/proto_common.hpp>
 #include <layers.pb.h>
+
+template <typename T, lbann::data_layout L, El::Device D>
+std::unique_ptr<lbann::Layer>
+lbann::build_entrywise_batch_normalization_layer_from_pbuf(
+  lbann_comm* comm,
+  lbann_data::Layer const& proto_layer)
+{
+  auto const& params = proto_layer.entrywise_batch_normalization();
+  if constexpr (std::is_same_v<T, float>)
+    return std::make_unique<entrywise_batch_normalization_layer<float, L, D>>(
+      params.decay(),
+      params.epsilon());
+  else if constexpr (std::is_same_v<T, double>)
+    return std::make_unique<entrywise_batch_normalization_layer<double, L, D>>(
+      params.decay(),
+      params.epsilon());
+  else
+    LBANN_ERROR("entrywise_batch_normalization_layer is only supported for "
+                "\"float\" and \"double\".");
+}
 
 namespace lbann {
 
-template <typename TensorDataType, data_layout Layout, El::Device Device>
-std::unique_ptr<Layer> build_one_hot_layer_from_pbuf(
-  lbann_comm* comm, lbann_data::Layer const& proto_layer)
-{
-  using LayerType = one_hot_layer<TensorDataType,Layout,Device>;
-  LBANN_ASSERT_MSG_HAS_FIELD(proto_layer, one_hot);
-  const auto& params = proto_layer.one_hot();
-  return std::make_unique<LayerType>(params.size());
-}
+#define PROTO_DEVICE(T, Device)                                                \
+  LBANN_LAYER_BUILDER_ETI(entrywise_batch_normalization, T, Device)
 
-#define PROTO_DEVICE(T, Device) \
-  LBANN_LAYER_BUILDER_ETI(one_hot, T, Device)
 #include "lbann/macros/instantiate_device.hpp"
 
 } // namespace lbann

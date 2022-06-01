@@ -82,6 +82,7 @@ Available Callbacks
 .. toctree::
    :maxdepth: 1
 
+   Export Onnx <callbacks/export_onnx>
    Summarize images <callbacks/summarize_images>
 
 ..
@@ -125,4 +126,3 @@ Available Callbacks
    Timer <callbacks/timer>
    Variable minibatch <callbacks/variable_minibatch>
    Compute model size <callbacks/compute_model_size>
-   

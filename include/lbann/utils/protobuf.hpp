@@ -23,19 +23,10 @@
 // implied. See the License for the specific language governing
 // permissions and limitations under the license.
 ////////////////////////////////////////////////////////////////////////////////
+#ifndef LBANN_UTILS_PROTOBUF_HPP_INCLUDED
+#define LBANN_UTILS_PROTOBUF_HPP_INCLUDED
 
-#ifndef LBANN_UTILS_VISION_HPP
-#define LBANN_UTILS_VISION_HPP
+#include "protobuf/decl.hpp"
+#include "protobuf/impl.hpp"
 
-namespace lbann {
-namespace utils {
-
-/** Get the linearized size of dims. */
-inline size_t get_linearized_size(const std::vector<size_t>& dims) {
-  return std::accumulate(dims.begin(), dims.end(), 1, std::multiplies<size_t>());
-}
-
-} // namespace utils
-} // namespace lbann
-
-#endif // LBANN_UTILS_VISION_HPP
+#endif // LBANN_UTILS_PROTOBUF_HPP_INCLUDED
