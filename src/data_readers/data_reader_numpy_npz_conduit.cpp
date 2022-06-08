@@ -255,9 +255,7 @@ bool numpy_npz_conduit_reader::load_numpy_npz_from_file(const std::unordered_set
 }
 
 bool numpy_npz_conduit_reader::fetch_datum(Mat& X, int data_id, int mb_idx) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("numpy_npz_conduit_reader::fetch_datum");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("numpy_npz_conduit_reader::fetch_datum");
   Mat X_v = El::View(X, El::IR(0, X.Height()), El::IR(mb_idx, mb_idx+1));
   conduit::Node node;
   if (data_store_active()) {

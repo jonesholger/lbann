@@ -92,9 +92,7 @@ void apply_binary_backprop_operator(
   El::Matrix<DataT, El::Device::CPU>& dx2,
   F f)
 {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
   if (x1.Contiguous() && x2.Contiguous() && dy.Contiguous() &&
       dx1.Contiguous() && dx2.Contiguous()) {
     const auto* x1_buffer = x1.LockedBuffer();

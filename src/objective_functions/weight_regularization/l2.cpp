@@ -39,9 +39,7 @@ namespace lbann {
 template <>
 void l2_weight_regularization::accumulate_contribution<El::Device::CPU>(const CPUMatType& vals,
                                                                         CPUMatType& contribution) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
   auto& sqsum = contribution(0, 0);
   if (!vals.IsEmpty()) {
     if (vals.Contiguous()) {

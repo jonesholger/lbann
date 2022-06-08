@@ -83,10 +83,10 @@ operator=(data_type_layer const& other) {
 
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::forward_prop() {
-#ifdef LBANN_HAS_CALIPER
-  std::string mark = this->get_type() + "_layer::fp_compute";
-  CALI_CXX_MARK_SCOPE(mark.c_str());
-#endif
+  //std::string mark = this->get_type() + "_layer::fp_compute";
+  //std::cerr << "data_type_layer:" << mark << std::endl;
+  //(void)mark; // quiet unused when we don't have caliper
+  //LBANN_CALIPER_MARK_SCOPE(mark.c_str());
   const auto fp_start = get_time();
 
   // Setup weights proxies
@@ -140,10 +140,9 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::forward_prop() 
 
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::back_prop_impl_() {
-#ifdef LBANN_HAS_CALIPER
-  std::string mark = this->get_type() + "_layer::bp_compute";
-  CALI_CXX_MARK_SCOPE(mark.c_str());
-#endif
+  //std::string mark = this->get_type() + "_layer::bp_compute";
+  //(void)mark; // quiet unused when we don't have caliper
+  //LBANN_CALIPER_MARK_SCOPE(mark.c_str());
   const auto bp_start = get_time();
 
   // Setup tensors
@@ -184,7 +183,7 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::back_prop_impl_
 template <typename InputTensorDataType, typename OutputTensorDataType>
 void data_type_layer<InputTensorDataType, OutputTensorDataType>::
 summarize_matrices(lbann_summary& summarizer, int step) {
-
+  LBANN_CALIPER_MARK_FUNCTION;
   // Summarize activation matrices
   const int num_children = get_num_children();
   for (int i = 0; i < num_children; ++i) {
@@ -487,6 +486,7 @@ void data_type_layer<InputTensorDataType, OutputTensorDataType>::
 setup_matrices(
   const std::vector<El::Grid*>& grids) {
 
+  LBANN_CALIPER_MARK_FUNCTION;
   using InputMatrixBuilderType = details::MatrixBuilder<InputTensorDataType>;
   using OutputMatrixBuilderType = details::MatrixBuilder<OutputTensorDataType>;
 

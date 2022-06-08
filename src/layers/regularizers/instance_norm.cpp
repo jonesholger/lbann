@@ -51,7 +51,6 @@ void fp_impl(lbann_comm& comm,
              El::AbstractDistMatrix<TensorDataType>& output,
              El::Matrix<TensorDataType, El::Device::CPU>& local_workspace)
 {
-
   // Local matrices
   using LocalMat = El::Matrix<TensorDataType, El::Device::CPU>;
   const auto& local_input = dynamic_cast<const LocalMat&>(input.LockedMatrix());
@@ -75,9 +74,7 @@ void fp_impl(lbann_comm& comm,
   auto local_sqsums = El::View(local_workspace,
                                El::IR(num_channels, 2*num_channels),
                                El::ALL);
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_BEGIN("instance_norm_fp");
-#endif
+
 
   LBANN_OMP_PARALLEL_FOR_COLLAPSE2
   for (El::Int k = 0; k < local_mini_batch_size; ++k) {
@@ -115,11 +112,6 @@ void fp_impl(lbann_comm& comm,
       }
     }
   }
-#ifdef LBANN_HAS_CALIPER
-  CALI_MARK_END("instance_norm_fp");
-#endif
-
-
 }
 
 } // namespace <anon>
@@ -127,6 +119,7 @@ void fp_impl(lbann_comm& comm,
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void instance_norm_layer<TensorDataType,Layout,Device>::fp_compute()
 {
+  LBANN_CALIPER_MARK_SCOPE("instance_norm_layer::fp_compute");
   const El::Int num_channels = this->get_output_dims().front();
   const El::Int channel_size = this->get_output_size() / num_channels;
   fp_impl(*this->get_comm(),
@@ -191,9 +184,6 @@ void bp_impl(lbann_comm& comm,
                                   El::IR(num_channels, 2*num_channels),
                                   El::ALL);
   const TensorDataType mean_scale = 1. / channel_size;
-#ifdef LBANN_HAS_CALIPER
-    CALI_MARK_BEGIN("instance_norm_bp");
-#endif
 
   LBANN_OMP_PARALLEL_FOR_COLLAPSE2
   for (El::Int k = 0; k < local_mini_batch_size; ++k) {
@@ -244,11 +234,6 @@ void bp_impl(lbann_comm& comm,
       }
     }
   }
-#ifdef LBANN_HAS_CALIPER
-  CALI_MARK_END("instance_norm_bp");
-#endif
-
-
 }
 
 } // namespace <anon>
@@ -256,6 +241,7 @@ void bp_impl(lbann_comm& comm,
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void instance_norm_layer<TensorDataType,Layout,Device>::bp_compute()
 {
+  LBANN_CALIPER_MARK_SCOPE("instance_norm_layer::bp_compute");
   const El::Int num_channels = this->get_output_dims().front();
   const El::Int channel_size = this->get_output_size() / num_channels;
   bp_impl(*this->get_comm(),

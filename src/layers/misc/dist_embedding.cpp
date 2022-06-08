@@ -108,7 +108,7 @@ void dist_embedding_layer<TensorDataType,Layout,Device>::attach_embeddings_to_sh
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void dist_embedding_layer<TensorDataType,Layout,Device>::fp_compute() {
-
+  LBANN_CALIPER_MARK_SCOPE("dist_embedding_layer::fp_compute");
   // Data matrices
   // Note: Make sure to get original weight values since they are in
   // NVSHMEM buffer.
@@ -223,6 +223,7 @@ void dist_embedding_layer<TensorDataType,Layout,Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void dist_embedding_layer<TensorDataType,Layout,Device>::bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("dist_embedding_layer::bp_compute");
 
   // Data matrices
   const auto& input = this->get_prev_activations();
@@ -304,9 +305,6 @@ template <typename TensorDataType, data_layout Layout, El::Device Device>
 void dist_embedding_layer<TensorDataType,Layout,Device>::apply_sparse_sgd_step(
   size_t num_gradients,
   LocalMat& local_embeddings) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
 
   // Synchronize non-blocking barrier
   // Note: Make sure gradients have been received.

@@ -575,7 +575,7 @@ void
 channelwise_fully_connected_layer<TensorDataType,Layout,Device>
 ::fp_compute()
 {
-
+  LBANN_CALIPER_MARK_SCOPE("channelwise_fully_connected_layer::fp_compute");
 #ifdef LBANN_HAS_DISTCONV
   // We are guaranteed to have
   if(this->distconv_enabled()){
@@ -659,6 +659,7 @@ void
 channelwise_fully_connected_layer<TensorDataType,Layout,Device>
 ::bp_compute()
 {
+  LBANN_CALIPER_MARK_SCOPE("channelwise_fully_connected_layer::bp_compute");
 #ifdef LBANN_HAS_DISTCONV
 
   if(this->distconv_enabled()){

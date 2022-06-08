@@ -292,6 +292,7 @@ protected:
   }
 
   void fp_compute() override {
+    LBANN_CALIPER_MARK_SCOPE("pooling_layer::fp_compute");
     if(this->using_gpus()) {
 #ifdef LBANN_HAS_DISTCONV
       if (this->distconv_enabled()) {
@@ -306,6 +307,7 @@ protected:
   }
 
   void bp_compute() override {
+    LBANN_CALIPER_MARK_SCOPE("pooling_layer::bp_compute");
     if(this->using_gpus()) {
 #ifdef LBANN_HAS_DISTCONV
       if (this->distconv_enabled()) {

@@ -42,9 +42,7 @@ void concat4d(
   const std::vector<dim4>& input_strides_list,
   T* output_buffer,
   const dim4& output_strides) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Compute offset corresponding to each input tensor
   std::vector<size_t> output_offset_list;
@@ -96,9 +94,7 @@ void slice4d(
   const std::vector<T*>& output_buffer_list,
   const std::vector<dim4>& output_dims_list,
   const std::vector<dim4>& output_strides_list) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Compute offset corresponding to each output tensor
   std::vector<size_t> input_offset_list;
@@ -176,6 +172,7 @@ template <typename TensorDataType>
 void fp_compute_impl(
   concatenate_layer<TensorDataType,data_layout::DATA_PARALLEL,El::Device::CPU>& l,
   size_t concat_dim) {
+  LBANN_CALIPER_MARK_SCOPE("concatenate_layer::fp_compute");
 
   // Check that number of dimensions is valid
   /// @todo Support tensors with arbitrary number of dimensions
@@ -251,6 +248,7 @@ template <typename TensorDataType>
 void bp_compute_impl(
   concatenate_layer<TensorDataType,data_layout::DATA_PARALLEL,El::Device::CPU>& l,
   size_t concat_dim) {
+  LBANN_CALIPER_MARK_SCOPE("concatenate_layer::bp_compute");
 
   // Check that number of dimensions is valid
   /// @todo Support tensors with arbitrary number of dimensions

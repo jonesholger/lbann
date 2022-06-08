@@ -51,9 +51,6 @@ void compute_batch_statistics(lbann_comm& comm,
                               El::AbstractDistMatrix<TensorDataType>& batch_statistics,
                               El::AbstractDistMatrix<TensorDataType>& running_mean,
                               El::AbstractDistMatrix<TensorDataType>& running_var) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
   using CPUMatType = El::Matrix<TensorDataType, El::Device::CPU>;
 
   // Local matrices
@@ -124,9 +121,6 @@ void apply_batchnorm(DataType epsilon,
                      El::Matrix<TensorDataType, El::Device::CPU>& local_output,
                      const El::Matrix<TensorDataType, El::Device::CPU>& local_mean,
                      const El::Matrix<TensorDataType, El::Device::CPU>& local_var) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
   const El::Int local_height = local_input.Height();
   const El::Int local_width = local_input.Width();
   LBANN_OMP_PARALLEL_FOR
@@ -408,6 +402,7 @@ void bp_impl(lbann_comm& comm,
 // Template instantiation
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void entrywise_batch_normalization_layer<TensorDataType, T_layout, Dev>::fp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("entrywise_batch_normalization_layer::fp_compute");
   using ValuesGetter = weights_details::SafeWeightsAccessor<TensorDataType>;
 
   const auto mode = this->m_model->get_execution_context().get_execution_mode();
@@ -424,6 +419,7 @@ void entrywise_batch_normalization_layer<TensorDataType, T_layout, Dev>::fp_comp
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void entrywise_batch_normalization_layer<TensorDataType, T_layout, Dev>::bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("entrywise_batch_normalization_layer::bp_compute");
   const auto mode = this->m_model->get_execution_context().get_execution_mode();
   bp_impl(*this->get_comm(),
           this->m_epsilon,

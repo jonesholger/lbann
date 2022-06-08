@@ -241,9 +241,7 @@ bool KFAC::train_mini_batch(
   model& model,
   data_coordinator& dc)
 {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("KRAC::train_mini_batch");
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
   auto& sgd_context = kfac_context.get_sgd_execution_context();
 
   model.reset_mode(sgd_context, execution_mode::training);

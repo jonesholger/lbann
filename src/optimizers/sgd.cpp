@@ -119,6 +119,7 @@ void sgd<TensorDataType>::step_compute(AbsDistMatrixType& values, const AbsDistM
 template <typename TensorDataType>
 void sgd<TensorDataType>::momentum_step_cpu(AbsDistMatrixType& values,
                                             const AbsDistMatrixType& gradient) {
+  LBANN_CALIPER_MARK_SCOPE("sgd::momentum_step");
   // Get local matrix data
   const auto learning_rate = El::To<TensorDataType>(this->get_learning_rate());
   const size_t local_height = values.LocalHeight();

@@ -45,7 +45,6 @@ void im2col(const CPUMatDT<TensorDataType>& im,
             const int * im_pads,
             const int * window_dims,
             const int * window_strides) {
-
   // Input and output parameters
   const int col_height = col.Height();
   const int col_width = col.Width();
@@ -453,7 +452,7 @@ void im2col_2d(const TensorDataType *__restrict__ input_buffer,
   const int offset_num_y = (offset_end_y - offset_start_y + offset_stride_y - 1) / offset_stride_y;
   const int output_height = num_channels * window_dim_x * window_dim_y;
 
-  //get original max threads
+  //get original max threads  // we may not want to reset to older max threads since tuned threads impacts program wide
   unsigned int omp_max_threads=omp_get_max_threads();
 
 

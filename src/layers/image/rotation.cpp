@@ -33,9 +33,7 @@ namespace lbann {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void rotation_layer<TensorDataType, Layout, Device>::fp_compute() {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("rotation_layer::fp_compute");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("rotation_layer::fp_compute");
 
   // Useful constants
   constexpr DataType Pi = M_PI;

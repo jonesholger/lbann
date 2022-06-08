@@ -25,10 +25,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "lbann_config.hpp"
-#ifdef LBANN_HAS_CALIPER
-#include "lbann/callbacks/profiler_caliper.hpp"
 #include "lbann/utils/serialize.hpp"
-
 #include <callbacks.pb.h>
 
 #include <algorithm>
@@ -36,9 +33,14 @@
 #include <vector>
 #include <regex>
 
-namespace lbann {
+#include "lbann/callbacks/profiler_caliper.hpp"
 
+namespace lbann {
 namespace callback {
+
+
+#ifdef LBANN_HAS_CALIPER
+
 
 using namespace std;
 
@@ -58,7 +60,7 @@ profiler_caliper::profiler_caliper(bool skip_init,bool autotune, int tuned_omp_t
     callback_base(), m_skip_init(skip_init) {
   profiler_caliper::s_autotune = autotune;
   profiler_caliper::s_tuned_omp_threads=tuned_omp_threads;
-  struct adiak_configuration cc;
+  struct lbann::adiak_configuration cc;
   adiak::init(NULL);
   adiak::user();
   adiak::launchdate();
@@ -257,21 +259,30 @@ void profiler_caliper::on_optimize_end(model *m, weights *w) {
   CALI_MARK_END(mark.c_str());
 }
 
+#endif // LBANN_HAS_CALIPER
+
+
 std::unique_ptr<callback_base>
 build_profiler_caliper_callback_from_pbuf(
   const google::protobuf::Message& proto_msg, const std::shared_ptr<lbann_summary>&) {
+#ifdef LBANN_HAS_CALIPER
   const auto& params =
     dynamic_cast<const lbann_data::Callback::CallbackProfilerCaliper&>(proto_msg);
   return make_unique<profiler_caliper>(params.skip_init(),params.autotune(),params.tuned_omp_threads());
+#else
+  LBANN_ERROR("CallbackProfileCaliper is not available; Caliper support not detected.");
+#endif
 }
 
 
 } // namespace callback
 } // namespace lbann
 
+#ifdef LBANN_HAS_CALIPER
 #define LBANN_CLASS_NAME callback::profiler_caliper
 #define LBANN_CLASS_LIBNAME callback_profiler_caliper
 #include <lbann/macros/register_class_with_cereal.hpp>
+#endif
 
-#endif // LBANN_HAS_CALIPER
+
 

@@ -176,7 +176,7 @@ void bp_compute_impl(
 template <typename TensorDataType>
 void fp_compute_impl(
   slice_layer<TensorDataType,data_layout::DATA_PARALLEL,El::Device::GPU>& l) {
-
+  LBANN_CALIPER_MARK_SCOPE("slice_layer::fp_compute");
   // Check that number of dimensions is valid
   /// @todo Support tensors with arbitrary number of dimensions
   const auto& input_dims = l.get_input_dims();
@@ -326,6 +326,7 @@ void fp_compute_impl(
 template <typename TensorDataType>
 void bp_compute_impl(
   slice_layer<TensorDataType,data_layout::DATA_PARALLEL,El::Device::GPU>& l) {
+  LBANN_CALIPER_MARK_SCOPE("slice_layer::bp_compute");
 
   // Check that number of dimensions is valid
   /// @todo Support tensors with arbitrary number of dimensions

@@ -54,9 +54,7 @@ void mixup::serialize(Archive & ar) {
 }
 
 void mixup::on_forward_prop_end(model *m, Layer *l) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("mixup::on_forward_prop_end");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("mixup::on_forward_prop_end");
   if (!m_layers.count(l->get_name())) {
     return;
   }

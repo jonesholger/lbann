@@ -479,6 +479,7 @@ void bp_impl(lbann_comm& comm,
 // Template instantiation
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void layer_norm_layer<TensorDataType, Layout, Device>::fp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("layer_norm_layer::fp_compute");
   fp_impl(*this->get_comm(),
           this->m_epsilon,
           this->get_prev_activations(),
@@ -488,6 +489,7 @@ void layer_norm_layer<TensorDataType, Layout, Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void layer_norm_layer<TensorDataType, Layout, Device>::bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("layer_norm_layer::bp_compute");
   bp_impl(*this->get_comm(),
           this->m_epsilon,
           this->get_prev_activations(),

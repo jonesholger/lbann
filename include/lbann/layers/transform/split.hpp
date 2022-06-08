@@ -105,7 +105,7 @@ protected:
   }
 
   void fp_setup_outputs(El::Int mini_batch_size) override {
-
+    LBANN_CALIPER_MARK_SCOPE("split_layer::fp_setup_outputs");
     const auto& input = this->get_prev_activations();
 
     if(this->get_parallel_strategy().enable_subgraph)
@@ -155,6 +155,7 @@ protected:
 
   void bp_compute() override {
 
+    LBANN_CALIPER_MARK_SCOPE("split_layer::bp_compute");
 
 #ifdef LBANN_HAS_DISTCONV
     if (this->distconv_enabled()) {

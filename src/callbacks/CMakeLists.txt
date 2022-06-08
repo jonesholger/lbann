@@ -59,6 +59,7 @@ set_full_path(THIS_DIR_SOURCES
   print_model_description.cpp
   print_statistics.cpp
   profiler.cpp
+  profiler_caliper.cpp
   replace_weights.cpp
   save_images.cpp
   save_model.cpp
@@ -74,10 +75,6 @@ set_full_path(THIS_DIR_SOURCES
 
 if(LBANN_HAS_ONNX)
   list(APPEND THIS_DIR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/export_onnx.cpp)
-endif ()
-
-if(LBANN_HAS_CALIPER)
-  list(APPEND THIS_DIR_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/profiler_caliper.cpp)
 endif ()
 
 # Propagate the files up the tree

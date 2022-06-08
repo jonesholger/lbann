@@ -75,6 +75,7 @@ void bp_compute_distconv(relu_distconv_adapter<TensorDataType, Layout, Device> &
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void relu_layer<TensorDataType, Layout, Device>::fp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("relu_layer::fp_compute");
 #ifdef LBANN_HAS_DISTCONV
   if (this->distconv_enabled()) {
     fp_compute_distconv(get_distconv_adapter());
@@ -88,6 +89,7 @@ void relu_layer<TensorDataType, Layout, Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void relu_layer<TensorDataType, Layout, Device>::bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("relu_layer::bp_compute");
 #ifdef LBANN_HAS_DISTCONV
   if (this->distconv_enabled()) {
     bp_compute_distconv(get_distconv_adapter());

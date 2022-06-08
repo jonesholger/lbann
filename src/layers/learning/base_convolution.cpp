@@ -434,7 +434,7 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>
 ::apply_convolution_dnn(bool during_forward_prop) {
-
+  LBANN_CALIPER_MARK_SCOPE("base_convolution_layer::apply_convolution_dnn");
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else
@@ -521,6 +521,7 @@ template <typename TensorDataType, El::Device Device>
 void
 base_convolution_layer<TensorDataType,Device>::
 apply_transposed_convolution_dnn(bool during_forward_prop) {
+  LBANN_CALIPER_MARK_SCOPE("base_convolution_layer::apply_transposed_convolution_dnn");
 #ifndef LBANN_HAS_DNN_LIB
   LBANN_ERROR("DNN library not detected");
 #else

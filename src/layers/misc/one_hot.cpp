@@ -31,9 +31,7 @@ namespace lbann {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void one_hot_layer<TensorDataType, Layout, Device>::fp_compute() {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("one_hot_layer::fp_compute");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("one_hot_layer::fp_compute");
 
   // Local matrices
   using LocalMat = El::Matrix<TensorDataType, El::Device::CPU>;

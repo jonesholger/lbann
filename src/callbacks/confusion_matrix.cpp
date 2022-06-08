@@ -147,9 +147,7 @@ void confusion_matrix::reset_counts(const model& m) {
 }
 
 void confusion_matrix::update_counts(const model& m) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
   constexpr DataType zero = 0;
 
   // Get predictions

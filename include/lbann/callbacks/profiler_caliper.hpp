@@ -37,10 +37,13 @@
 #include <caliper/cali_macros.h>
 #include <adiak.hpp>
 #include "adiak_config.hpp"
+#endif
 
 
 namespace lbann {
 namespace callback {
+
+#ifdef LBANN_HAS_CALIPER
 
 /**
  */
@@ -129,6 +132,8 @@ class profiler_caliper : public callback_base {
   bool m_skip_init;  // default is to skip first epoch
 };
 
+#endif // ifdef LBANN_HAS_CALIPER
+
 // Builder function
 std::unique_ptr<callback_base>
 build_profiler_caliper_callback_from_pbuf(
@@ -136,6 +141,6 @@ build_profiler_caliper_callback_from_pbuf(
 
 } // namespace callback
 } // namespace lbann
-#endif // ifdef LBANN_HAS_CALIPER
+
 
 #endif  // LBANN_CALLBACKS_PROFILER_CALIPER_HPP_INCLUDED

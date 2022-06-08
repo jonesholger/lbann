@@ -91,6 +91,7 @@ void local_bp_cpu(const El::AbstractMatrix<TensorDataType>& local_prediction,
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("cross_entropy_layer::fp_compute");
   local_fp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->Matrix());
@@ -98,6 +99,7 @@ void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_fp_compute() {
 
 template <typename TensorDataType, data_layout T_layout, El::Device Dev>
 void cross_entropy_layer<TensorDataType, T_layout, Dev>::local_bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("cross_entropy_layer::bp_compute");
   local_bp_cpu(this->get_local_prev_activations(0),
                this->get_local_prev_activations(1),
                this->m_workspace->LockedMatrix(),

@@ -62,6 +62,7 @@ void batchwise_reduce_sum_layer<TensorDataType,Layout,Device>::setup_dims(DataRe
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void batchwise_reduce_sum_layer<TensorDataType, Layout, Device>::fp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("batchwise_reduce_sum_layer::fp_compute");
 
   // Data tensors
   // Note: Assume input and output are aligned.
@@ -109,6 +110,7 @@ void batchwise_reduce_sum_layer<TensorDataType, Layout, Device>::fp_compute() {
 
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void batchwise_reduce_sum_layer<TensorDataType, Layout, Device>::bp_compute() {
+  LBANN_CALIPER_MARK_SCOPE("batchwise_reduce_sum_layer::bp_compute");
 
   // Data tensors
   // Note: Assume input grad and output grad are aligned.

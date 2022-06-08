@@ -35,9 +35,7 @@ void tessellate_layer<TensorDataType, T_layout, Dev>
                 const std::vector<int>& output_dims,
                 const El::AbstractMatrix<TensorDataType>& input,
                 El::AbstractDistMatrix<TensorDataType>& output) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("tessellate_layer::fp_compute_3d");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("tessellate_layer::fp_compute");
 
   // Input matrix
   const El::Int input_dim0 = input_dims[0];
@@ -90,9 +88,7 @@ void tessellate_layer<TensorDataType, T_layout, Dev>
                 const std::vector<int>& output_dims,
                 const El::AbstractDistMatrix<TensorDataType>& output_grad,
                 El::AbstractMatrix<TensorDataType>& input_grad) {
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_SCOPE("tessellate_layer::bp_compute_3d");
-#endif
+  LBANN_CALIPER_MARK_SCOPE("tessellate_layer::bp_compute");
 
   // Input grad matrix
   const El::Int input_dim0 = input_dims[0];

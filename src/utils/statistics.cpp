@@ -68,10 +68,7 @@ void entrywise_mean_and_stdev(const Mat& data,
 void entrywise_mean_and_stdev(const AbsDistMat& data,
                               DataType& mean,
                               DataType& stdev) {
-
-#ifdef LBANN_HAS_CALIPER
-  CALI_CXX_MARK_FUNCTION;
-#endif
+  LBANN_CALIPER_MARK_FUNCTION;
   // Matrix dimensions
   const El::Int size = data.Height() * data.Width();
   const El::Int local_height = data.LocalHeight();

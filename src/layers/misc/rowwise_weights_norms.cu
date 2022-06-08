@@ -69,6 +69,7 @@ template <typename TensorDataType, data_layout Layout, El::Device Device>
 void rowwise_weights_norms_layer<TensorDataType, Layout, Device>::row_sqsums(
   const El::Matrix<TensorDataType, Device>& mat,
   El::Matrix<TensorDataType, Device>& row_sqsums) {
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Launch kernel
   El::Zero(row_sqsums);
@@ -118,6 +119,7 @@ __global__ void sqrt_kernel(
 template <typename TensorDataType, data_layout Layout, El::Device Device>
 void rowwise_weights_norms_layer<TensorDataType, Layout, Device>::sqrt(
   El::Matrix<TensorDataType, Device>& mat) {
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Check that matrix is valid
   if (!mat.Contiguous()) {
@@ -167,6 +169,7 @@ template <typename TensorDataType, data_layout Layout, El::Device Device>
 void rowwise_weights_norms_layer<TensorDataType, Layout, Device>::divide(
   El::Matrix<TensorDataType, Device>& numer,
   const El::Matrix<TensorDataType, Device>& denom) {
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Check that matrices are valid
   if (numer.Height() != denom.Height()
@@ -241,6 +244,7 @@ void rowwise_weights_norms_layer<TensorDataType, Layout, Device>::row_axpy(
   const El::Matrix<TensorDataType, Device>& x_mat,
   TensorDataType beta,
   El::Matrix<TensorDataType, Device>& y_mat) {
+  LBANN_CALIPER_MARK_FUNCTION;
 
   // Check that matrices are valid
   if (x_mat.Height() != y_mat.Height()
