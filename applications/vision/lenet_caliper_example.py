@@ -115,6 +115,7 @@ def caliper_apply_autotune():
       autotune_threads = gg['im2col_threads']
     except:
       print("Can't apply autotune")
+      autotune_threads = 0
 
     return lbann.CallbackProfilerCaliper(skip_init=False,autotune=False,tuned_omp_threads = int(autotune_threads))
 
@@ -137,7 +138,7 @@ model = lbann.Model(num_epochs,
                     metrics=[lbann.Metric(acc, name='accuracy', unit='%')],
                     callbacks=[lbann.CallbackPrintModelDescription(),
                                lbann.CallbackPrint(),
-                               calipermode['apply_autotune'](),
+                               calipermode['normal'](),
                                lbann.CallbackTimer()])
 
 # Setup optimizer
